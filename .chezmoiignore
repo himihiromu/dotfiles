@@ -12,9 +12,12 @@ scoop.json
 Library
 {{ end }}
 
+{{ if ne .chezmoi.os "linux" }}
+.bashrc
+{{ end }}
+
 {{ if eq .chezmoi.os "windows" }}
 .asdf*
-.bashrc
 .zshrc
 .tmux
 .tmux.conf
