@@ -1,0 +1,24 @@
+README.md
+.vscode
+
+{{ if ne .chezmoi.os "windows" }}
+Documents
+AppData
+.config/powershell/*.d
+scoop.json
+{{ end }}
+
+{{ if ne .chezmoi.os "darwin" }}
+Library
+{{ end }}
+
+{{ if eq .chezmoi.os "windows" }}
+.asdf*
+.bashrc
+.zshrc
+.tmux
+.tmux.conf
+.tmux.conf.local
+.config/zsh
+.config/fish
+{{ end }}
