@@ -1,0 +1,7 @@
+{{ if eq .setting_pc_type "office_pc" }}
+{{ if .proxy_ip }}
+
+git config --global http.proxy {{ .proxy_ip }}
+
+{{ end }}
+{{ end }}

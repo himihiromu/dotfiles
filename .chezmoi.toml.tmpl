@@ -1,0 +1,18 @@
+{{- $git_username := promptStringOnce . "git_username" "Git username" ""}}
+{{- $git_email := promptStringOnce . "git_email" "Git email" ""}}
+{{- $all_pc_type := list "private_pc" "office_pc" -}}
+{{- $setting_pc_type := promptChoiceOnce . "setting_pc_type" "Setting PC Type" $all_pc_type -}}
+
+[data]
+	git_username = {{ $git_username | quote }}
+	git_email = {{ $git_email | quote }}
+	setting_pc_type = {{ $setting_pc_type | quote -}}
+{{ if eq $setting_pc_type "office_pc" }}
+{{- $proxy_ip := promptStringOnce . "proxy_ip" "Proxy Server IP Address" ""}}
+	proxy_ip = {{ $proxy_ip | quote -}}
+{{ end }}
+
+{{ if eq .chezmoi.os "windows" }}
+[cd]
+	command = 'powershell'
+{{ end }}
