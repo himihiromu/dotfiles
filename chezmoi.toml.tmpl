@@ -1,5 +1,11 @@
+{{- $git_username := promptStringOnce . "git_username" "Git username" ""}}
+{{- $git_email := promptStringOnce . "openai_key" "Git email" ""}}
+
+[data]
+    git_username = {{ $git_username | quote }}
+    git_email = {{ $git_email | quote }}
+
 {{ if eq .chezmoi.os "windows" }}
 [cd]
-2
-	command: "C:/Windows/System32/WindowsPowerShell/v1.0/powershell.exe"
+	command: "C:\Users\himih\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Windows PowerShell"
 {{ end }}
