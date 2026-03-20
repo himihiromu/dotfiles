@@ -6,14 +6,17 @@ Documents
 AppData
 .config/powershell/*.d
 scoop.json
+.chezmoiscripts/windows/*
 {{ end }}
 
 {{ if ne .chezmoi.os "darwin" }}
 Library
+.chezmoiscripts/darwin/*
 {{ end }}
 
 {{ if ne .chezmoi.os "linux" }}
 .bashrc
+.chezmoiscripts/linux/*
 {{ end }}
 
 {{ if eq .chezmoi.os "windows" }}
