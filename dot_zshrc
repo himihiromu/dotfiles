@@ -1,0 +1,58 @@
+
+# Kiro CLI pre block. Keep at the top of this file.
+[[ -f "${HOME}/Library/Application Support/kiro-cli/shell/zshrc.pre.zsh" ]] && builtin source "${HOME}/Library/Application Support/kiro-cli/shell/zshrc.pre.zsh"
+
+export PATH=/opt/homebrew/bin:$PATH
+export PATH=~/.local/bin:$PATH
+
+
+function fzf-select-history() {
+  BUFFER=$(\history -n -r 1 | fzf --query "$LBUFFER")
+  CURSOR=$#BUFFER
+  zle clear-screen
+}
+zle -N fzf-select-history
+bindkey '^r' fzf-select-history
+
+eval "$(zoxide init --cmd cd zsh)"
+
+function zoxide-interactive() {
+  local destination="$(zoxide query -i)"
+  if [ -n "$destination" ]; then
+    BUFFER="cd ${destination}"
+    zle accept-line
+  else
+    zle reset-prompt
+  fi
+}
+zle -N zoxide-interactive
+bindkey '^u' zoxide-interactive
+
+eval "$(direnv hook bash)"
+
+export JAVA_HOME=`/usr/libexec/java_home -v 17`
+PATH=${JAVA_HOME}/bin:${PATH}
+export PATH="/opt/homebrew/sbin:$PATH"
+
+# source /Users/mac42/.docker/init-zsh.sh || true # Added by Docker Desktop
+
+# Generated for envman. Do not edit.
+[ -s "$HOME/.config/envman/load.sh" ] && source "$HOME/.config/envman/load.sh"
+
+# brew install location change
+export PATH=$HOME/.homebrew/bin:$PATH
+export HOMEBREW_CACHE=$HOME/.homebrew/caches
+
+# cask install location change
+export HOMEBREW_CASK_OPTS="--appdir=${HOME}/Applications"
+
+
+# Kiro CLI post block. Keep at the bottom of this file.
+[[ -f "${HOME}/Library/Application Support/kiro-cli/shell/zshrc.post.zsh" ]] && builtin source "${HOME}/Library/Application Support/kiro-cli/shell/zshrc.post.zsh"
+
+[[ "$TERM_PROGRAM" == "kiro" ]] && . "$(kiro --locate-shell-integration-path zsh)"
+
+source ~/.nix-profile/share/zsh-abbr/zsh-abbr.zsh
+abbr -S -q la='ls -a'
+abbr -S -q ll='ls -l'
+abbr -S -q lal='ls -al'

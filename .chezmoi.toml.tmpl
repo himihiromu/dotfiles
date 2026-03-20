@@ -1,10 +1,13 @@
 {{- $git_username := promptStringOnce . "git_username" "Git username" ""}}
+{{ $is_desktop := promptBoolOnce . "is_desktop" "is desktop machine" }}
 {{- $git_email := promptStringOnce . "git_email" "Git email" ""}}
 {{- $all_pc_type := list "private_pc" "office_pc" -}}
 {{- $setting_pc_type := promptChoiceOnce . "setting_pc_type" "Setting PC Type" $all_pc_type -}}
 
 [data]
+  machine_username = {{ env "USER" }}
 	git_username = {{ $git_username | quote }}
+	is_desktop = {{ $is_desktop | quote }}
 	git_email = {{ $git_email | quote }}
 	setting_pc_type = {{ $setting_pc_type | quote -}}
 {{ if eq $setting_pc_type "office_pc" }}
@@ -15,4 +18,10 @@
 {{ if eq .chezmoi.os "windows" }}
 [cd]
 	command = 'powershell'
+{{ else if eq .chezmoi.os "darwin" }}
+[cd]
+	command = 'fish'
+{{ else if eq .chezmoi.os "linux" }}
+[cd]
+	command = 'fish'
 {{ end }}
