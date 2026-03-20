@@ -1,0 +1,61 @@
+if status is-interactive
+    # Commands to run in interactive sessions can go here
+
+    set -x PATH $HOME/.cargo/bin $PATH
+    set -x EDITOR vi
+    eval (direnv hook fish)
+
+    # fzf history search (Ctrl+R)
+    function fzf-select-history
+        set -l query (commandline)
+        if set -l result (history | fzf --query "$query")
+            commandline -r $result
+        end
+        commandline -f repaint
+    end
+    bind \cr fzf-select-history
+
+    # zoxide
+    zoxide init --cmd cd fish | source
+
+    # zoxide interactive (Ctrl+U)
+    function zoxide-interactive
+        if set -l result (zoxide query -i)
+            cd $result
+        end
+        commandline -f repaint
+    end
+    bind \cu zoxide-interactive
+
+    fish_add_path /opt/homebrew/opt/util-linux/bin
+    fish_add_path /opt/homebrew/opt/util-linux/sbin
+    set -gx LDFLAGS "-L/opt/homebrew/opt/util-linux/lib"
+    set -gx CPPFLAGS "-I/opt/homebrew/opt/util-linux/include"
+    set -x ANDROID_HOME /usr/local/share/android-sdk
+    set -x PATH $ANDROID_HOME/tools/bin $PATH
+    set -x PATH $ANDROID_HOME/platform-tools $PATH
+{{- if not .is_desktop and eq .chezmoi.os "darwin" }}
+    set -x DOCKER_HOST unix://$HOME/.lima/docker/sock/docker.sock
+{{- end }}
+{{- if eq .chezmoi.os "darwin" }}
+    set PATH /opt/homebrew/bin $PATH
+    eval (/opt/homebrew/bin/brew shellenv)
+{{- end }}
+end
+
+# Created by `pipx` on 2023-12-08 05:12:06
+set -x PATH $PATH $HOME/.local/bin
+
+{{- if eq .chezmoi.os "darwin" }}
+# brew install location change
+set -x PATH $HOME/.homebrew/bin $PATH
+set -x HOMEBREW_CACHE $HOME/.homebrew/caches
+
+# cask install folder change
+set -x HOMEBREW_CASK_OPTS "--appdir=$HOME/Applications"
+{{- end }}
+
+# abbreviations
+abbr -a la 'ls -a'
+abbr -a ll 'ls -l'
+abbr -a lal 'ls -al'

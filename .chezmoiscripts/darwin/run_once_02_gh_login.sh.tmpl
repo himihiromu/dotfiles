@@ -1,0 +1,14 @@
+#!/bin/zsh
+
+{{- if eq .setting_pc_type "office_pc" }}
+
+brew install gh
+
+gh auth login \
+  --git-protocol https \
+{{- if ne .ghe_domain "" }}
+  --hostname "{{ .ghe_domain }}"
+{{- else }}
+  --hostname github.com
+{{- end }}
+{{- end }}

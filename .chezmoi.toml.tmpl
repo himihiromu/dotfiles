@@ -5,7 +5,7 @@
 {{- $setting_pc_type := promptChoiceOnce . "setting_pc_type" "Setting PC Type" $all_pc_type -}}
 
 [data]
-  machine_username = {{ env "USER" }}
+	machine_username = {{ env "USER" | quote }}
 	git_username = {{ $git_username | quote }}
 	is_desktop = {{ $is_desktop | quote }}
 	git_email = {{ $git_email | quote }}
