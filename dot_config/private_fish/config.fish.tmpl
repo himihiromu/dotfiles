@@ -7,8 +7,8 @@ if status is-interactive
 
     # fzf history search (Ctrl+R)
     function fzf-select-history
-        set -l query (commandline)
-        if set -l result (history | fzf --query "$query")
+        if set -l result (history | fzf --q
+        set -l query (commandline)uery "$query")
             commandline -r $result
         end
         commandline -f repaint
@@ -34,7 +34,7 @@ if status is-interactive
     set -x ANDROID_HOME /usr/local/share/android-sdk
     set -x PATH $ANDROID_HOME/tools/bin $PATH
     set -x PATH $ANDROID_HOME/platform-tools $PATH
-{{- if not .is_desktop and eq .chezmoi.os "darwin" }}
+{{- if (and (not .is_desktop) (eq .chezmoi.os "darwin")) }}
     set -x DOCKER_HOST unix://$HOME/.lima/docker/sock/docker.sock
 {{- end }}
 {{- if eq .chezmoi.os "darwin" }}
