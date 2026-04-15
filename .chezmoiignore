@@ -12,6 +12,7 @@ scoop.json
 {{ if ne .chezmoi.os "darwin" }}
 Library
 .chezmoiscripts/darwin/*
+dot_lima/*
 {{ end }}
 
 {{ if ne .chezmoi.os "linux" }}
