@@ -1,0 +1,135 @@
+name: video-assets
+description: Remotionで利用する再利用可能なAsset Componentを制作・レビュー・管理する
+initial_step: plan_asset
+max_steps: 25
+
+loop_monitors:
+  - cycle:
+      - review_asset
+      - design_asset
+      - validate_design
+      - implement_asset
+    threshold: 3
+    judge:
+      persona: asset-reviewer
+      policy: video-assets-common
+      instruction: judge-asset-review-loop
+      rules:
+        - condition: LOOP_HEALTHY
+          next: review_asset
+        - condition: LOOP_ABORT
+          next: ABORT
+
+steps:
+  - name: plan_asset
+    persona: asset-planner
+    policy:
+      - video-assets-common
+      - component-design
+    instruction: plan-asset
+    edit: true
+    required_permission_mode: edit
+    output_contracts:
+      report:
+        - name: asset-plan.md
+          format: asset-plan-report
+    rules:
+      - condition: STEP_COMPLETE
+        next: design_asset
+      - condition: STEP_BLOCKED
+        next: ABORT
+
+  - name: design_asset
+    persona: asset-designer
+    policy:
+      - video-assets-common
+      - component-design
+      - remotion-best-practices
+    instruction: design-asset
+    edit: true
+    required_permission_mode: edit
+    output_contracts:
+      report:
+        - name: asset-design.md
+          format: asset-design-report
+    rules:
+      - condition: STEP_COMPLETE
+        next: validate_design
+      - condition: STEP_BLOCKED
+        next: ABORT
+
+  - name: validate_design
+    persona: technical-validator
+    policy:
+      - video-assets-common
+      - remotion-best-practices
+      - performance
+    instruction: validate-design
+    edit: true
+    required_permission_mode: edit
+    output_contracts:
+      report:
+        - name: technical-validation.md
+          format: validation-report
+    rules:
+      - condition: STEP_COMPLETE
+        next: implement_asset
+      - condition: STEP_BLOCKED
+        next: ABORT
+
+  - name: implement_asset
+    persona: remotion-asset-builder
+    policy:
+      - video-assets-common
+      - component-design
+      - remotion-best-practices
+      - performance
+      - reusability
+      - animation-style
+    instruction: implement-asset
+    edit: true
+    required_permission_mode: edit
+    output_contracts:
+      report:
+        - name: asset-implementation.md
+          format: asset-implementation-report
+    rules:
+      - condition: ASSET_IMPLEMENTED
+        next: review_asset
+      - condition: ASSET_NEEDS_REWORK
+        next: design_asset
+
+  - name: review_asset
+    persona: asset-reviewer
+    policy:
+      - video-assets-common
+      - component-design
+      - remotion-best-practices
+      - performance
+      - reusability
+      - animation-style
+    instruction: review-asset
+    edit: false
+    output_contracts:
+      report:
+        - name: asset-review.md
+          format: asset-review-report
+    rules:
+      - condition: REVIEW_APPROVED
+        next: update_catalog
+      - condition: REVIEW_NEEDS_FIX
+        next: design_asset
+
+  - name: update_catalog
+    persona: asset-catalog-updater
+    policy: video-assets-common
+    instruction: update-catalog
+    edit: true
+    required_permission_mode: edit
+    output_contracts:
+      report:
+        - name: asset-catalog.md
+          format: asset-catalog-report
+    rules:
+      - condition: STEP_COMPLETE
+        next: COMPLETE
