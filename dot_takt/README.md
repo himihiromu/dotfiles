@@ -1,8 +1,8 @@
 # TAKT Video Workflows
 
-技術系VOICEVOX動画の制作・改善・振り返りを行うTAKTワークフロー群です。
-`video-production`、`video-improvement`、`video-retrospective` の3つのワークフローが
-相互に連携し、Knowledge Layerを継続的に成長させます。
+技術系VOICEVOX動画の制作・改善・振り返り・Asset制作を行うTAKTワークフロー群です。
+`video-production`、`video-improvement`、`video-retrospective`、`video-assets` の4つのワークフローが
+相互に連携し、Knowledge LayerとAsset Libraryを継続的に成長させます。
 
 ## 配置
 
@@ -56,6 +56,14 @@ Script修正 → Storyboard修正 → Producer Review
 
 制作要約 → プロセス分析 → 知識抽出 → テンプレート更新提案 → Retrospective Review
 
+### video-assets
+再利用可能なRemotion Componentを制作・レビュー・管理するワークフロー。
+
+Asset Plan → Asset Design → Technical Validation → Implementation → Review → Catalog Update
+
+動画専用ではなく、Asset Libraryとして長期的に育てることを目的とします。
+ターミナル、コードエディタ、ダイアグラム、アニメーション、比較表等の共通Componentを対象とします。
+
 ## 主な成果物
 
 ```text
@@ -85,6 +93,7 @@ Remotionコードの実際の配置先は、既存リポジトリ構造を調査
 - PRODUCER_REVISE_STORYBOARD
 - PRODUCER_REVISE_IMPLEMENTATION
 - PRODUCER_BLOCKED
+- ASSET_IMPLEMENTED / ASSET_NEEDS_REWORK
 
 ## 注意
 
