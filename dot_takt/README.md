@@ -1,7 +1,8 @@
-# TAKT Video Production Workflow
+# TAKT Video Workflows
 
-技術系VOICEVOX動画を、企画 → 調査 → 台本 → 3観点レビュー → VOICEVOX調整 →
-Remotion絵コンテ → Remotion実装 → 最終レビューの順で制作するTAKTワークフローです。
+技術系VOICEVOX動画の制作・改善・振り返りを行うTAKTワークフロー群です。
+`video-production`、`video-improvement`、`video-retrospective` の3つのワークフローが
+相互に連携し、Knowledge Layerを継続的に成長させます。
 
 ## 配置
 
@@ -28,14 +29,32 @@ takt workflow doctor
 takt
 ```
 
-ワークフロー選択で `video-production` を選び、作りたい動画のテーマ、対象視聴者、
-想定尺、参考資料、既存Remotion動画のパスなどを伝えて `/go` します。
+ワークフロー選択で対象を選び、必要な情報を伝えて `/go` します。
 
 キューへ追加した場合:
 
 ```bash
 takt run
 ```
+
+## ワークフロー一覧
+
+### video-production
+技術系VOICEVOX動画を新規制作するワークフロー。
+
+企画 → 調査 → 台本 → 3観点レビュー → VOICEVOX調整 →
+Remotion絵コンテ → Remotion実装 → 最終レビュー
+
+### video-improvement
+既存動画の品質を改善するワークフロー。
+
+Content Analysis → 4観点Review → Review統合 → 修正計画 →
+Script修正 → Storyboard修正 → Producer Review
+
+### video-retrospective
+制作プロセスを振り返り、Knowledge Layerを改善するワークフロー。
+
+制作要約 → プロセス分析 → 知識抽出 → テンプレート更新提案 → Retrospective Review
 
 ## 主な成果物
 
@@ -69,6 +88,6 @@ Remotionコードの実際の配置先は、既存リポジトリ構造を調査
 
 ## 注意
 
-- `max_steps: 40` は、レビュー修正ループを含む上限です。
+- 各ワークフローの `max_steps` は、レビュー修正ループを含む上限です。
 - Webアクセス可否は使用プロバイダと権限に依存します。
 - 実際のTAKTバージョンで `takt workflow doctor` を必ず実行してください。
