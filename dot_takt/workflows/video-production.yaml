@@ -1,0 +1,302 @@
+name: video-production
+description: 技術系VOICEVOX動画の企画・調査・台本・レビュー・Remotion実装を行う
+initial_step: plan_topic
+max_steps: 40
+
+loop_monitors:
+  - cycle:
+      - script_reviews
+      - revise_script
+    threshold: 3
+    judge:
+      persona: youtube-producer
+      policy: video-production-common
+      instruction: judge-script-review-loop
+      rules:
+        - condition: LOOP_HEALTHY
+          next: script_reviews
+        - condition: LOOP_ESCALATE
+          next: producer_review
+        - condition: LOOP_ABORT
+          next: ABORT
+
+  - cycle:
+      - producer_review
+      - revise_script
+    threshold: 2
+    judge:
+      persona: youtube-producer
+      policy: video-production-common
+      instruction: judge-producer-loop
+      rules:
+        - condition: LOOP_HEALTHY
+          next: producer_review
+        - condition: LOOP_ABORT
+          next: ABORT
+
+  - cycle:
+      - producer_review
+      - revise_storyboard
+    threshold: 2
+    judge:
+      persona: youtube-producer
+      policy: video-production-common
+      instruction: judge-producer-loop
+      rules:
+        - condition: LOOP_HEALTHY
+          next: producer_review
+        - condition: LOOP_ABORT
+          next: ABORT
+
+  - cycle:
+      - producer_review
+      - revise_remotion
+    threshold: 2
+    judge:
+      persona: youtube-producer
+      policy: video-production-common
+      instruction: judge-producer-loop
+      rules:
+        - condition: LOOP_HEALTHY
+          next: producer_review
+        - condition: LOOP_ABORT
+          next: ABORT
+
+steps:
+  - name: plan_topic
+    persona: topic-planner
+    policy: video-production-common
+    instruction: plan-video-topic
+    edit: true
+    required_permission_mode: edit
+    output_contracts:
+      report:
+        - name: topic-plan.md
+          format: video-artifact-report
+    rules:
+      - condition: STEP_COMPLETE
+        next: research
+      - condition: NEEDS_INPUT
+        next: ABORT
+      - condition: STEP_BLOCKED
+        next: ABORT
+
+  - name: research
+    persona: tech-researcher
+    policy: video-production-common
+    instruction: research-video-topic
+    edit: true
+    required_permission_mode: edit
+    output_contracts:
+      report:
+        - name: research.md
+          format: video-artifact-report
+    rules:
+      - condition: STEP_COMPLETE
+        next: write_script
+      - condition: NEEDS_INPUT
+        next: ABORT
+      - condition: STEP_BLOCKED
+        next: ABORT
+
+  - name: write_script
+    persona: script-writer
+    policy: video-production-common
+    instruction: write-voicevox-script
+    edit: true
+    required_permission_mode: edit
+    output_contracts:
+      report:
+        - name: script.md
+          format: video-artifact-report
+    rules:
+      - condition: STEP_COMPLETE
+        next: script_reviews
+      - condition: NEEDS_INPUT
+        next: ABORT
+      - condition: STEP_BLOCKED
+        next: ABORT
+
+  - name: script_reviews
+    parallel:
+      - name: education_review
+        persona: education-reviewer
+        policy:
+          - video-production-common
+          - video-script-review
+        instruction: review-script-education
+        edit: false
+        output_contracts:
+          report:
+            - name: education-review.md
+              format: video-review-report
+
+      - name: entertainment_review
+        persona: entertainment-reviewer
+        policy:
+          - video-production-common
+          - video-script-review
+        instruction: review-script-entertainment
+        edit: false
+        output_contracts:
+          report:
+            - name: entertainment-review.md
+              format: video-review-report
+
+      - name: japanese_review
+        persona: japanese-reviewer
+        policy:
+          - video-production-common
+          - video-script-review
+        instruction: review-script-japanese
+        edit: false
+        output_contracts:
+          report:
+            - name: japanese-review.md
+              format: video-review-report
+
+    rules:
+      - condition: all("REVIEW_APPROVED", "重大または必須の修正なし")
+        next: voicevox_adjust
+      - condition: any("REVIEW_NEEDS_FIX", "台本に必須修正あり")
+        next: revise_script
+      - condition: any("REVIEW_BLOCKED", "前提情報不足または検証不能")
+        next: ABORT
+
+  - name: revise_script
+    persona: script-writer
+    policy: video-production-common
+    instruction: revise-script-from-reviews
+    edit: true
+    required_permission_mode: edit
+    pass_previous_response: false
+    output_contracts:
+      report:
+        - name: script-revision.md
+          format: video-artifact-report
+    rules:
+      - condition: STEP_COMPLETE
+        next: script_reviews
+      - condition: NEEDS_INPUT
+        next: ABORT
+      - condition: STEP_BLOCKED
+        next: ABORT
+
+  - name: voicevox_adjust
+    persona: voicevox-director
+    policy: video-production-common
+    instruction: adjust-script-for-voicevox
+    edit: true
+    required_permission_mode: edit
+    output_contracts:
+      report:
+        - name: voicevox-script.md
+          format: video-artifact-report
+    rules:
+      - condition: STEP_COMPLETE
+        next: storyboard
+      - condition: NEEDS_INPUT
+        next: ABORT
+      - condition: STEP_BLOCKED
+        next: ABORT
+
+  - name: storyboard
+    persona: remotion-storyboard-designer
+    policy: video-production-common
+    instruction: design-remotion-storyboard
+    edit: true
+    required_permission_mode: edit
+    output_contracts:
+      report:
+        - name: storyboard.md
+          format: video-artifact-report
+    rules:
+      - condition: STEP_COMPLETE
+        next: implement_remotion
+      - condition: NEEDS_INPUT
+        next: ABORT
+      - condition: STEP_BLOCKED
+        next: ABORT
+
+  - name: implement_remotion
+    persona: remotion-coder
+    policy:
+      - video-production-common
+      - remotion-implementation
+    instruction: implement-remotion-video
+    edit: true
+    required_permission_mode: edit
+    output_contracts:
+      report:
+        - name: remotion-implementation.md
+          format: video-artifact-report
+    rules:
+      - condition: STEP_COMPLETE
+        next: producer_review
+      - condition: NEEDS_INPUT
+        next: ABORT
+      - condition: STEP_BLOCKED
+        next: producer_review
+
+  - name: producer_review
+    persona: youtube-producer
+    policy:
+      - video-production-common
+      - final-video-review
+    instruction: review-video-production
+    edit: false
+    output_contracts:
+      report:
+        - name: producer-review.md
+          format: producer-review-report
+    rules:
+      - condition: PRODUCER_APPROVE
+        next: COMPLETE
+      - condition: PRODUCER_REVISE_SCRIPT
+        next: revise_script
+      - condition: PRODUCER_REVISE_STORYBOARD
+        next: revise_storyboard
+      - condition: PRODUCER_REVISE_IMPLEMENTATION
+        next: revise_remotion
+      - condition: PRODUCER_BLOCKED
+        next: ABORT
+
+  - name: revise_storyboard
+    persona: remotion-storyboard-designer
+    policy: video-production-common
+    instruction: revise-storyboard-from-producer
+    edit: true
+    required_permission_mode: edit
+    pass_previous_response: false
+    output_contracts:
+      report:
+        - name: storyboard-revision.md
+          format: video-artifact-report
+    rules:
+      - condition: STEP_COMPLETE
+        next: revise_remotion
+      - condition: NEEDS_INPUT
+        next: ABORT
+      - condition: STEP_BLOCKED
+        next: ABORT
+
+  - name: revise_remotion
+    persona: remotion-coder
+    policy:
+      - video-production-common
+      - remotion-implementation
+    instruction: revise-remotion-from-producer
+    edit: true
+    required_permission_mode: edit
+    pass_previous_response: false
+    output_contracts:
+      report:
+        - name: remotion-revision.md
+          format: video-artifact-report
+    rules:
+      - condition: STEP_COMPLETE
+        next: producer_review
+      - condition: NEEDS_INPUT
+        next: ABORT
+      - condition: STEP_BLOCKED
+        next: producer_review
