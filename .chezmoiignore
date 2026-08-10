@@ -20,6 +20,11 @@ dot_lima/*
 .chezmoiscripts/linux/*
 {{ end }}
 
+{{ if not (and (eq .chezmoi.os "linux") .is_desktop) }}
+.config/waypaper
+.local/state/waypaper
+{{ end }}
+
 {{ if eq .chezmoi.os "windows" }}
 .asdf*
 .zshrc
