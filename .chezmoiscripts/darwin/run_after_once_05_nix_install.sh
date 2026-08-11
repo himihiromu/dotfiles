@@ -1,7 +1,7 @@
 #!/bin/zsh
 
 # home-manager のインスコ
-nix run nixpkgs#home-manager -- switch --flake github:himihiromu/my-nix-package-control#myHomeConfig --show-trace \
+nix run nixpkgs#home-manager -- switch --flake github:himihiromu/my-nix-package-control#myHomeConfig-darwin --show-trace \
   --override-input local-options path:$HOME/.config/nix/local-input/default.nix
 
 # nix-darwin のインスコ
