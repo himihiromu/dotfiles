@@ -6,6 +6,15 @@ chezmoi を利用して、複数 OS / 複数端末にまたがる設定を管理
 
 chezmoiをセットアップの入口としてdotfilesを適用します。
 
+NixOSでは、汎用Linux向けのchezmoiバイナリを直接実行できないため、
+Nixpkgsのchezmoiを利用します。
+
+```shell
+nix run nixpkgs#chezmoi -- init --apply himihiromu
+```
+
+NixOS以外では、chezmoiの公式インストーラーから初期化します。
+
 ```shell
 sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply himihiromu
 ```
