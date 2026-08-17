@@ -2,6 +2,25 @@
 
 chezmoi を利用して、複数 OS / 複数端末にまたがる設定を管理するためのリポジトリです。
 
+## セットアップ
+
+chezmoiをセットアップの入口としてdotfilesを適用します。
+
+```shell
+sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply himihiromu
+```
+
+ユーザー名、Git設定、デスクトップ環境かどうかなどの端末固有値は、
+`.chezmoi.toml.tmpl`から質問され、chezmoiのローカル設定へ保存されます。
+
+Linuxでは初回の`chezmoi apply`に続いて、`/etc/os-release`からディストリビューションを判定し、
+環境に応じたNix構成を適用します。
+
+- NixOSではNixOS configurationをリビルド
+- それ以外のLinuxでは単体Home Manager configurationを適用
+
+NixOS/Home Managerからchezmoiを呼び戻さない一方向の構成にしています。
+
 ## 目的
 
 このリポジトリは、長期的に維持したい設定を整理し、環境差分を吸収しながら再利用しやすく管理するための受け皿です。
