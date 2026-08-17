@@ -4,28 +4,22 @@ chezmoi を利用して、複数 OS / 複数端末にまたがる設定を管理
 
 ## セットアップ
 
-Nixが利用できる環境では、flake appからchezmoiを対話的に初期化します。
-
-```shell
-nix run github:himihiromu/dotfiles
-```
-
-ユーザー名、Git設定、デスクトップ環境かどうかなどの端末固有値は、既存の
-`.chezmoi.toml.tmpl`から質問され、chezmoiのローカル設定へ保存されます。
-
-Linuxでは初回の`chezmoi apply`に続いて、環境に応じたNix構成を適用します。
-
-- `/etc/NIXOS`が存在する場合はNixOS configuration
-- それ以外のLinuxでは単体Home Manager configuration
-
-Nixがまだない一般的なLinuxでは、従来どおりchezmoiから初期化できます。
+chezmoiをセットアップの入口としてdotfilesを適用します。
 
 ```shell
 sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply himihiromu
 ```
 
-chezmoiをセットアップの入口とし、NixOS/Home Managerからchezmoiを呼び戻さない
-一方向の構成にしています。
+ユーザー名、Git設定、デスクトップ環境かどうかなどの端末固有値は、
+`.chezmoi.toml.tmpl`から質問され、chezmoiのローカル設定へ保存されます。
+
+Linuxでは初回の`chezmoi apply`に続いて、`/etc/os-release`からディストリビューションを判定し、
+環境に応じたNix構成を適用します。
+
+- NixOSではNixOS configurationをリビルド
+- それ以外のLinuxでは単体Home Manager configurationを適用
+
+NixOS/Home Managerからchezmoiを呼び戻さない一方向の構成にしています。
 
 ## 目的
 

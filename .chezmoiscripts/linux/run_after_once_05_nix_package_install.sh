@@ -5,7 +5,12 @@ set -euo pipefail
 nix_flake="github:himihiromu/my-nix-package-control"
 local_options="path:$HOME/.config/nix/local-input/default.nix"
 
-if [ -e /etc/NIXOS ]; then
+distribution_id=""
+if [ -r /etc/os-release ]; then
+  distribution_id="$(. /etc/os-release && printf '%s' "${ID:-}")"
+fi
+
+if [ "$distribution_id" = "nixos" ]; then
   sudo nixos-rebuild switch --flake "$nix_flake#nixos" \
     --override-input local-options "$local_options"
 else
