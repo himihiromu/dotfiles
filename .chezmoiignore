@@ -28,4 +28,5 @@ dot_lima/*
 .tmux.conf.local
 .config/zsh
 .config/fish
+.config/mise
 {{ end }}
