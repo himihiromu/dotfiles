@@ -39,7 +39,7 @@ if [ "$#" -ne 1 ] || [ "$1" != switch ]; then
   printf 'usage: mise nixos switch\n' >&2
   exit 2
 fi
-sudo nixos-rebuild switch --flake "$HOME/ghq/github.com/himihiromu/my-nix-package-control"
+sudo nixos-rebuild switch --flake "$HOME/ghq/github.com/himihiromu/my-nix-package-control" --override-input local-options "path:$HOME/.config/nix/local-input/default.nix"
 '''
 
 [tasks.nix]
