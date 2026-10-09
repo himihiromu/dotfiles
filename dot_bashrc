@@ -89,9 +89,32 @@ fi
 #export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
 
 # some more ls aliases
-alias ll='ls -alF'
-alias la='ls -A'
+alias ll='ls -l'
+alias la='ls -a'
+alias lal='ls -al'
 alias l='ls -CF'
+
+if command -v zoxide >/dev/null 2>&1; then
+    eval "$(zoxide init bash)"
+fi
+
+__fzf_history_search() {
+    local selected
+    selected="$(history | sed -E 's/^ *[0-9]+[[:space:]]*//' | fzf --tac)" || return
+    READLINE_LINE="$selected"
+    READLINE_POINT=${#READLINE_LINE}
+}
+
+__fzf_ghq_search() {
+    local selected
+    selected="$(ghq list --full-path | fzf)" || return
+    cd "$selected" || return
+    READLINE_LINE=''
+    READLINE_POINT=0
+}
+
+bind -x '"\C-r": __fzf_history_search'
+bind -x '"\C-u": __fzf_ghq_search'
 
 # Add an "alert" alias for long running commands.  Use like so:
 #   sleep 10; alert
