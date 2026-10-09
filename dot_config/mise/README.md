@@ -1,17 +1,17 @@
-# mise tasks
+# mise タスク
 
-This directory contains global mise tasks for the local `my-nix-package-control`
-repository at `~/ghq/github.com/himihiromu/my-nix-package-control`. Tasks can be
-run from any working directory after chezmoi applies this configuration.
+このディレクトリには、`~/ghq/github.com/himihiromu/my-nix-package-control` にある
+ローカルリポジトリ向けの mise タスクを定義しています。chezmoi でこの設定を適用すると、
+どのディレクトリからでも実行できます。
 
-| Command | What it does |
+| コマンド | 動作 |
 | --- | --- |
-| `mise develop <environment>` | Starts `nix develop` for the named flake environment. |
-| `mise home-manager switch` | Runs Home Manager against `#myHomeConfig`, including the local options input. |
-| `mise nis-darwin switch` | Runs nix-darwin against `#mac-config`, including the local options input. |
-| `mise nixos switch` | Runs `nixos-rebuild switch` against the local repository flake. |
-| `mise nix update` | Runs `nix flake update` for the local repository. |
-| `mise nix gc` | Runs `nix-store --gc`. |
+| `mise develop <environment>` | 指定した flake 環境の `nix develop` を起動します。 |
+| `mise home-manager switch` | ローカル options input を使い、`#myHomeConfig` に対して Home Manager を実行します。 |
+| `mise nis-darwin switch` | ローカル options input を使い、`#mac-config` に対して nix-darwin を実行します。 |
+| `mise nixos switch` | ローカルリポジトリの flake に対して `nixos-rebuild switch` を実行します。 |
+| `mise nix update` | ローカルリポジトリに対して `nix flake update` を実行します。 |
+| `mise nix gc` | `nix-store --gc` を実行します。 |
 
-The `home-manager`, `nis-darwin`, and `nixos` switch tasks use `sudo` where
-required. `mise nix gc` removes unused paths from the Nix store.
+`home-manager`、`nis-darwin`、`nixos` の各 switch タスクは、必要に応じて `sudo` を使います。
+`mise nix gc` は、Nix store から不要なパスを削除します。
