@@ -2,74 +2,78 @@
 run = '''
 #!/usr/bin/env bash
 set -e
-if [ "$#" -ne 1 ]; then
-  printf 'usage: mise develop <environment>\n' >&2
+if [ "$#" -lt 1 ]; then
+  printf 'usage: mise develop <environment> [nix develop options...]\n' >&2
   exit 2
 fi
-nix develop "$HOME/ghq/github.com/himihiromu/my-nix-package-control#$1"
+environment="$1"
+shift
+nix develop "$HOME/ghq/github.com/himihiromu/my-nix-package-control#$environment" "$@"
 '''
 
 [tasks.home-manager]
 run = '''
 #!/usr/bin/env bash
 set -e
-if [ "$#" -ne 1 ] || [ "$1" != switch ]; then
-  printf 'usage: mise home-manager switch\n' >&2
+if [ "$#" -lt 1 ]; then
+  printf 'usage: mise home-manager <action> [options...]\n' >&2
   exit 2
 fi
-nix run nixpkgs#home-manager -- switch --flake "$HOME/ghq/github.com/himihiromu/my-nix-package-control#myHomeConfig" --show-trace --override-input local-options "path:$HOME/.config/nix/local-input/default.nix"
+action="$1"
+shift
+nix run nixpkgs#home-manager -- "$action" --flake "$HOME/ghq/github.com/himihiromu/my-nix-package-control#myHomeConfig" --show-trace --override-input local-options "path:$HOME/.config/nix/local-input/default.nix" "$@"
 '''
 
 [tasks.nis-darwin]
 run = '''
 #!/usr/bin/env bash
 set -e
-if [ "$#" -ne 1 ] || [ "$1" != switch ]; then
-  printf 'usage: mise nis-darwin switch\n' >&2
+if [ "$#" -lt 1 ]; then
+  printf 'usage: mise nis-darwin <action> [options...]\n' >&2
   exit 2
 fi
-sudo nix run nix-darwin -- switch --flake "$HOME/ghq/github.com/himihiromu/my-nix-package-control#mac-config" --override-input local-options "path:$HOME/.config/nix/local-input/default.nix"
+action="$1"
+shift
+sudo nix run nix-darwin -- "$action" --flake "$HOME/ghq/github.com/himihiromu/my-nix-package-control#mac-config" --override-input local-options "path:$HOME/.config/nix/local-input/default.nix" "$@"
 '''
 
 [tasks.nixos]
 run = '''
 #!/usr/bin/env bash
 set -e
-if [ "$#" -lt 1 ] || [ "$#" -gt 2 ] || [ "$1" != switch ]; then
-  printf 'usage: mise nixos switch [nixos|macbook-air]\n' >&2
+if [ "$#" -lt 1 ]; then
+  printf 'usage: mise nixos <action> [host] [nixos-rebuild options...]\n' >&2
   exit 2
 fi
+action="$1"
+shift
 host_suffix=""
-if [ "$#" -eq 2 ]; then
-  case "$2" in
-    nixos|macbook-air) host_suffix="#$2" ;;
-    *)
-      printf 'usage: mise nixos switch [nixos|macbook-air]\n' >&2
-      exit 2
-      ;;
-  esac
+if [ "$#" -gt 0 ] && [[ "$1" != -* ]]; then
+  host_suffix="#$1"
+  shift
 fi
-sudo nixos-rebuild switch --flake "$HOME/ghq/github.com/himihiromu/my-nix-package-control$host_suffix" --override-input local-options "path:$HOME/.config/nix/local-input/default.nix"
+sudo nixos-rebuild "$action" --flake "$HOME/ghq/github.com/himihiromu/my-nix-package-control$host_suffix" --override-input local-options "path:$HOME/.config/nix/local-input/default.nix" "$@"
 '''
 
 [tasks.nix]
 run = '''
 #!/usr/bin/env bash
 set -e
-if [ "$#" -ne 1 ]; then
-  printf 'usage: mise nix <update|gc>\n' >&2
+if [ "$#" -lt 1 ]; then
+  printf 'usage: mise nix <update|gc|nix arguments...> [options...]\n' >&2
   exit 2
 fi
 case "$1" in
   update)
-    nix flake update "$HOME/ghq/github.com/himihiromu/my-nix-package-control"
+    shift
+    nix flake update "$HOME/ghq/github.com/himihiromu/my-nix-package-control" "$@"
     ;;
   gc)
-    nix-store --gc
+    shift
+    nix-store --gc "$@"
     ;;
   *)
-    printf 'usage: mise nix <update|gc>\n' >&2
-    exit 2
+    nix "$@"
     ;;
 esac
 '''
