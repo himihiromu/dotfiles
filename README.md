@@ -51,6 +51,9 @@ NixOS/Home Managerからchezmoiを呼び戻さない一方向の構成にして�
 
 通常の dotfiles 本体を置く領域です。
 
+`mise develop js` などで ghq 配下の Nix 開発環境を起動できます。
+前提と使い方、検証方法は [mise タスク](dot_config/mise/README.md) を参照してください。
+
 ### `.chezmoiscripts/`
 - `darwin/`
 - `linux/`

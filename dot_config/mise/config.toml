@@ -1,14 +1,17 @@
 [tasks.develop]
+description = "Enter a devShell from the ghq-managed my-nix-package-control"
+dir = "{{cwd}}"
+raw = true
 run = '''
 #!/usr/bin/env bash
 set -e
-if [ "$#" -lt 1 ]; then
+if [ "$#" -lt 1 ] || [ -z "$1" ]; then
   printf 'usage: mise develop <environment> [nix develop options...]\n' >&2
   exit 2
 fi
 environment="$1"
 shift
-nix develop "$HOME/ghq/github.com/himihiromu/my-nix-package-control#$environment" "$@"
+exec nix develop "$HOME/ghq/github.com/himihiromu/my-nix-package-control#$environment" "$@"
 '''
 
 [tasks.home-manager]
