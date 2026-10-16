@@ -1,4 +1,7 @@
 README.md
+docs
+tests
+.bash-test-*
 .vscode
 
 {{ if ne .chezmoi.os "windows" }}
