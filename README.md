@@ -51,6 +51,9 @@ NixOS/Home Managerからchezmoiを呼び戻さない一方向の構成にして�
 
 通常の dotfiles 本体を置く領域です。
 
+Bash の abbr・Ctrl+R 履歴検索・Ctrl+U ghq 検索の操作、既存シェルとの比較と検証方法は
+[Bash シェル設定](docs/bash-shell.md) を参照してください。
+
 ### `.chezmoiscripts/`
 - `darwin/`
 - `linux/`
