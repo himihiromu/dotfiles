@@ -56,6 +56,11 @@ NixOS/Home Managerからchezmoiを呼び戻さない一方向の構成にして�
 `mise nix update`、`mise nix gc` は同じ管理リポジトリ内で実行します。
 前提と使い方、検証方法は [mise タスク](dot_config/mise/README.md) を参照してください。
 
+Bash の abbr・Ctrl+R 履歴検索・Ctrl+U ghq 検索の操作、既存シェルとの比較と検証方法は
+[Bash シェル設定](docs/bash-shell.md) を参照してください。
+略語展開には [Nix 側 PR #68](https://github.com/himihiromu/my-nix-package-control/pull/68) の
+Home Manager 設定で配置する `bash-abbrev-alias` が必要です。
+
 ### `.chezmoiscripts/`
 - `darwin/`
 - `linux/`

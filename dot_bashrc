@@ -100,21 +100,45 @@ fi
 
 __fzf_history_search() {
     local selected
-    selected="$(history | sed -E 's/^ *[0-9]+[[:space:]]*//' | fzf --tac)" || return
+    selected="$(HISTTIMEFORMAT= builtin history | sed -E 's/^ *[0-9]+\*?  //' |
+        fzf --tac --no-multi --query "$READLINE_LINE")" || return 0
+    [[ -n $selected ]] || return 0
     READLINE_LINE="$selected"
     READLINE_POINT=${#READLINE_LINE}
 }
 
 __fzf_ghq_search() {
-    local selected
-    selected="$(ghq list --full-path | fzf)" || return
-    cd "$selected" || return
+    local repositories selected
+    repositories="$(ghq list --full-path)" || return 0
+    [[ -n $repositories ]] || return 0
+    selected="$(printf '%s\n' "$repositories" | fzf --no-multi)" || return 0
+    [[ -n $selected ]] || return 0
+    builtin cd -- "$selected" || return 0
     READLINE_LINE=''
     READLINE_POINT=0
 }
 
-bind -x '"\C-r": __fzf_history_search'
-bind -x '"\C-u": __fzf_ghq_search'
+# Home Manager installs the pinned upstream library; chezmoi owns this .bashrc.
+# The library installs bindings in the current keymap.
+# Load it only in Emacs mode, preserving vi editing.
+if [[ -o emacs ]] &&
+    [[ -r ${XDG_CONFIG_HOME:-$HOME/.config}/bash/abbrev-alias.plugin.bash ]]; then
+    source "${XDG_CONFIG_HOME:-$HOME/.config}/bash/abbrev-alias.plugin.bash"
+    abbrev-alias --command la='ls -a' ll='ls -l' lal='ls -al'
+fi
+
+# These search bindings target Bash's default Emacs editing mode.
+if command -v fzf >/dev/null 2>&1; then
+    bind -m emacs-standard -x '"\C-r": __fzf_history_search'
+    if command -v ghq >/dev/null 2>&1; then
+        # Otherwise Readline can restore the terminal's kill character (^U)
+        # at the first prompt, silently replacing our search binding.
+        bind 'set bind-tty-special-chars off'
+        # Keep the original Ctrl+U action accessible when repository search wins.
+        bind -m emacs-standard '"\C-x\C-u": unix-line-discard'
+        bind -m emacs-standard -x '"\C-u": __fzf_ghq_search'
+    fi
+fi
 
 # Add an "alert" alias for long running commands.  Use like so:
 #   sleep 10; alert
