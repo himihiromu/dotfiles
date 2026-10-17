@@ -55,6 +55,7 @@ class MiseTasksTest(unittest.TestCase):
             "TEST_LOG": str(self.log),
         }
         self.flake = str(self.home / "ghq/github.com/himihiromu/my-nix-package-control")
+        Path(self.flake).mkdir(parents=True)
 
     def run_mise(self, *args, cwd=None, expected=0):
         self.log.unlink(missing_ok=True)
@@ -110,9 +111,9 @@ class MiseTasksTest(unittest.TestCase):
             os.close(master)
             os.close(slave)
 
-    def test_existing_tasks(self):
+    def management_cases(self):
         local_options = f"path:{self.home}/.config/nix/local-input/default.nix"
-        cases = [
+        return [
             (["home-manager", "build", "--dry-run"], "nix",
              ["run", "nixpkgs#home-manager", "--", "build", "--flake", f"{self.flake}#myHomeConfig", "--show-trace", "--override-input", "local-options", local_options, "--dry-run"]),
             (["nis-darwin", "build"], "sudo",
@@ -121,15 +122,83 @@ class MiseTasksTest(unittest.TestCase):
              ["nixos-rebuild", "build", "--flake", f"{self.flake}#macbook-air", "--override-input", "local-options", local_options, "--dry-run"]),
             (["nixos", "build", "--dry-run"], "sudo",
              ["nixos-rebuild", "build", "--flake", self.flake, "--override-input", "local-options", local_options, "--dry-run"]),
-            (["nix", "update", "--offline"], "nix", ["flake", "update", self.flake, "--offline"]),
+            (["nix", "update", "--offline"], "nix", ["flake", "update", "--offline"]),
             (["nix", "gc", "--print-dead"], "nix-store", ["--gc", "--print-dead"]),
             (["nix", "build", "example#package"], "nix", ["build", "example#package"]),
         ]
-        for invocation, command, args in cases:
+    def test_management_commands_cwd_arguments_and_exit(self):
+        extra = ["--option", "two words", "", "*", "$(pwd)"]
+        for invocation, command, args in self.management_cases():
+            # Test the requested switch commands as well as the existing build API.
+            variants = [invocation]
+            if "build" in invocation and invocation[0] != "nix":
+                variants.append(["switch" if a == "build" else a for a in invocation])
+            for variant in variants:
+                expected_args = ["switch" if a == "build" and variant != invocation else a for a in args]
+                for cwd in (self.cwd, self.home):
+                    for exit_code in (0, 42):
+                        with self.subTest(invocation=variant, cwd=cwd, exit_code=exit_code):
+                            self.env["TEST_EXIT"] = str(exit_code)
+                            self.run_mise(*variant, *extra, cwd=cwd, expected=exit_code)
+                            self.assertEqual(self.call()["command"], command)
+                            self.assertEqual(self.call()["args"], expected_args + extra)
+                            self.assertEqual(self.call()["cwd"], self.flake)
+
+    def test_requested_commands_without_extra_arguments(self):
+        for invocation in (["home-manager", "switch"], ["nis-darwin", "switch"],
+                           ["nixos", "switch"], ["nix", "update"], ["nix", "gc"]):
+            for cwd in (self.cwd, self.home):
+                with self.subTest(invocation=invocation, cwd=cwd):
+                    self.run_mise(*invocation, cwd=cwd)
+                    self.assertEqual(self.call()["cwd"], self.flake)
+                    args = self.call()["args"]
+                    if invocation == ["nix", "update"]:
+                        self.assertEqual(args, ["flake", "update"])
+                    elif invocation == ["nix", "gc"]:
+                        self.assertEqual(args, ["--gc"])
+                    else:
+                        self.assertIn("switch", args)
+                        self.assertIn("--flake", args)
+
+    @unittest.skipUnless(os.name == "posix", "PTY test requires Unix")
+    def test_management_commands_receive_terminal(self):
+        import pty
+
+        for invocation in (["home-manager", "switch"], ["nis-darwin", "switch"],
+                           ["nixos", "switch"], ["nix", "gc"]):
             with self.subTest(invocation=invocation):
-                self.run_mise(*invocation)
-                self.assertEqual(self.call()["command"], command)
-                self.assertEqual(self.call()["args"], args)
+                master, slave = pty.openpty()
+                try:
+                    result = subprocess.run(
+                        [MISE, *invocation], cwd=self.cwd, env=self.env,
+                        stdin=slave, stdout=slave, stderr=slave, timeout=20,
+                    )
+                    self.assertEqual(result.returncode, 0)
+                    self.assertEqual(self.call()["tty"], [True, True, True])
+                    self.assertEqual(self.call()["cwd"], self.flake)
+                finally:
+                    os.close(master)
+                    os.close(slave)
+
+    def test_update_accepts_input_names(self):
+        self.run_mise("nix", "update", "nixpkgs", "home-manager")
+        self.assertEqual(self.call()["args"], ["flake", "update", "nixpkgs", "home-manager"])
+        self.assertEqual(self.call()["cwd"], self.flake)
+
+    def test_management_requires_action(self):
+        for task in ("home-manager", "nis-darwin", "nixos", "nix"):
+            with self.subTest(task=task):
+                result = self.run_mise(task, expected=2)
+                self.assertIn("usage: mise", result.stderr)
+                self.assertFalse(self.log.exists())
+
+    def test_missing_checkout_does_not_execute_management_command(self):
+        Path(self.flake).rmdir()
+        for args in (["home-manager", "switch"], ["nis-darwin", "switch"],
+                     ["nixos", "switch"], ["nix", "update"], ["nix", "gc"]):
+            with self.subTest(args=args):
+                self.run_mise(*args, expected=1)
+                self.assertFalse(self.log.exists())
 
 
 if __name__ == "__main__":

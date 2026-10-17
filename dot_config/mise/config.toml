@@ -15,6 +15,8 @@ exec nix develop "$HOME/ghq/github.com/himihiromu/my-nix-package-control#$enviro
 '''
 
 [tasks.home-manager]
+interactive = true
+dir = "{{env.HOME}}/ghq/github.com/himihiromu/my-nix-package-control"
 run = '''
 #!/usr/bin/env bash
 set -e
@@ -24,10 +26,12 @@ if [ "$#" -lt 1 ]; then
 fi
 action="$1"
 shift
-nix run nixpkgs#home-manager -- "$action" --flake "$HOME/ghq/github.com/himihiromu/my-nix-package-control#myHomeConfig" --show-trace --override-input local-options "path:$HOME/.config/nix/local-input/default.nix" "$@"
+exec nix run nixpkgs#home-manager -- "$action" --flake "$HOME/ghq/github.com/himihiromu/my-nix-package-control#myHomeConfig" --show-trace --override-input local-options "path:$HOME/.config/nix/local-input/default.nix" "$@"
 '''
 
 [tasks.nis-darwin]
+interactive = true
+dir = "{{env.HOME}}/ghq/github.com/himihiromu/my-nix-package-control"
 run = '''
 #!/usr/bin/env bash
 set -e
@@ -37,10 +41,12 @@ if [ "$#" -lt 1 ]; then
 fi
 action="$1"
 shift
-sudo nix run nix-darwin -- "$action" --flake "$HOME/ghq/github.com/himihiromu/my-nix-package-control#mac-config" --override-input local-options "path:$HOME/.config/nix/local-input/default.nix" "$@"
+exec sudo nix run nix-darwin -- "$action" --flake "$HOME/ghq/github.com/himihiromu/my-nix-package-control#mac-config" --override-input local-options "path:$HOME/.config/nix/local-input/default.nix" "$@"
 '''
 
 [tasks.nixos]
+interactive = true
+dir = "{{env.HOME}}/ghq/github.com/himihiromu/my-nix-package-control"
 run = '''
 #!/usr/bin/env bash
 set -e
@@ -55,10 +61,12 @@ if [ "$#" -gt 0 ] && [[ "$1" != -* ]]; then
   host_suffix="#$1"
   shift
 fi
-sudo nixos-rebuild "$action" --flake "$HOME/ghq/github.com/himihiromu/my-nix-package-control$host_suffix" --override-input local-options "path:$HOME/.config/nix/local-input/default.nix" "$@"
+exec sudo nixos-rebuild "$action" --flake "$HOME/ghq/github.com/himihiromu/my-nix-package-control$host_suffix" --override-input local-options "path:$HOME/.config/nix/local-input/default.nix" "$@"
 '''
 
 [tasks.nix]
+interactive = true
+dir = "{{env.HOME}}/ghq/github.com/himihiromu/my-nix-package-control"
 run = '''
 #!/usr/bin/env bash
 set -e
@@ -69,14 +77,14 @@ fi
 case "$1" in
   update)
     shift
-    nix flake update "$HOME/ghq/github.com/himihiromu/my-nix-package-control" "$@"
+    exec nix flake update "$@"
     ;;
   gc)
     shift
-    nix-store --gc "$@"
+    exec nix-store --gc "$@"
     ;;
   *)
-    nix "$@"
+    exec nix "$@"
     ;;
 esac
 '''
