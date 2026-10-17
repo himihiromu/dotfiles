@@ -41,10 +41,26 @@ Nix `home-manager/shell/bash.nix:8` は `.bashrc` の生成を無効化してい
 シェル起動時にダウンロードしない。
 
 ライブラリは `${XDG_CONFIG_HOME:-$HOME/.config}/bash/abbrev-alias.plugin.bash` から読み込む。
-未配置・Bash 4.2 未満・vi モードの場合は読み込まず、既存 alias を利用できる。
-ソースの `typeset -g` と連想配列を使うため Bash 4.2 以上を条件とする。
+未配置・vi モードの場合は読み込まず、既存 alias を利用できる。
+Nix が提供する Bash を対象とし、実行時の Bash バージョン判定は行わない。
 略語を追加する場合は `abbrev-alias --command name='command args'` を使う。
 `--eval` は使用しない（上流では明示指定時に置換値を評価する機能がある）。
+
+## 入力方式の切り替え
+
+`[[ -o emacs ]]` は Bash の入力方式の判定であり、エディタの Emacs とは無関係。
+現在の方式は `set -o` の `emacs` / `vi` 行で確認できる。
+
+```sh
+set -o emacs  # Emacs 方式（標準、Ctrl+A / Ctrl+E 等）
+set -o vi     # vi 方式（Esc で操作モードへ）
+```
+
+このコマンドによる切り替えは現在の Bash に対して有効。
+新しいシェルでも固定する場合は `~/.inputrc` に `set editing-mode emacs`
+または `set editing-mode vi` を記述する（他の Readline 利用プログラムにも影響する）。
+ライブラリは `.bashrc` 読み込み時に判定するため、vi 方式で起動してから Emacs 方式で
+abbr を使う場合は `set -o emacs` の後に `source ~/.bashrc` を実行する。
 
 ## キーと対応範囲
 

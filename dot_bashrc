@@ -119,10 +119,9 @@ __fzf_ghq_search() {
 }
 
 # Home Manager installs the pinned upstream library; chezmoi owns this .bashrc.
-# The library needs Bash 4.2+ and installs bindings in the current keymap.
-# Load it only in Emacs mode, preserving vi editing and older Bash versions.
-if [[ $BASH_VERSINFO -gt 4 || ( $BASH_VERSINFO -eq 4 && ${BASH_VERSINFO[1]} -ge 2 ) ]] &&
-    [[ -o emacs ]] &&
+# The library installs bindings in the current keymap.
+# Load it only in Emacs mode, preserving vi editing.
+if [[ -o emacs ]] &&
     [[ -r ${XDG_CONFIG_HOME:-$HOME/.config}/bash/abbrev-alias.plugin.bash ]]; then
     source "${XDG_CONFIG_HOME:-$HOME/.config}/bash/abbrev-alias.plugin.bash"
     abbrev-alias --command la='ls -a' ll='ls -l' lal='ls -al'
