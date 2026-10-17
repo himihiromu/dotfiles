@@ -51,6 +51,11 @@ NixOS/Home Managerからchezmoiを呼び戻さない一方向の構成にして�
 
 通常の dotfiles 本体を置く領域です。
 
+`mise develop js` などで ghq 配下の Nix 開発環境を起動できます。
+`mise home-manager switch`、`mise nis-darwin switch`、`mise nixos switch`、
+`mise nix update`、`mise nix gc` は同じ管理リポジトリ内で実行します。
+前提と使い方、検証方法は [mise タスク](dot_config/mise/README.md) を参照してください。
+
 Bash の abbr・Ctrl+R 履歴検索・Ctrl+U ghq 検索の操作、既存シェルとの比較と検証方法は
 [Bash シェル設定](docs/bash-shell.md) を参照してください。
 略語展開には [Nix 側 PR #68](https://github.com/himihiromu/my-nix-package-control/pull/68) の
