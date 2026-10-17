@@ -10,15 +10,26 @@ import shutil
 import tempfile
 import time
 import unittest
+import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 BASH = shutil.which('bash')
+if 'BASH_ABBREV_ALIAS_SOURCE' not in os.environ:
+    sys.exit('Set BASH_ABBREV_ALIAS_SOURCE to the pinned abbrev-alias.plugin.bash (see docs/bash-shell.md).')
+PLUGIN = Path(os.environ['BASH_ABBREV_ALIAS_SOURCE']).resolve()
+if not PLUGIN.is_file():
+    raise RuntimeError(f'Upstream library not found: {PLUGIN}')
 
 
 class Shell:
-    def __init__(self, dependencies=True):
+    def __init__(self, dependencies=True, plugin=True, editing_mode="emacs", xdg_config=False):
         self.tmp = tempfile.TemporaryDirectory(prefix='.bash-test-', dir=ROOT)
         self.home = Path(self.tmp.name)
+        config_home = self.home / ('custom-config' if xdg_config else '.config')
+        if plugin:
+            plugin_dir = config_home / 'bash'
+            plugin_dir.mkdir(parents=True)
+            (plugin_dir / 'abbrev-alias.plugin.bash').symlink_to(PLUGIN)
         bin_dir = self.home / 'bin'
         bin_dir.mkdir()
         (bin_dir / 'sed').symlink_to(shutil.which('sed'))
@@ -33,7 +44,7 @@ class Shell:
                 script.write_text(f'#!{BASH}\n{body}\n')
                 script.chmod(0o755)
         rc = self.home / 'rc'
-        rc.write_text(f'PATH={shlex.quote(str(bin_dir))}\nsource {shlex.quote(str(ROOT / "dot_bashrc"))}\n'
+        rc.write_text(f'set -o {editing_mode}\nPATH={shlex.quote(str(bin_dir))}\nsource {shlex.quote(str(ROOT / "dot_bashrc"))}\n'
                       "PS1='TEST_PROMPT> '\nPS2='CONTINUE> '\n"
                       "HISTFILE=/dev/null\nPROMPT_COMMAND=\n"
                       "unalias ls 2>/dev/null\n"
@@ -43,6 +54,7 @@ class Shell:
             os.chdir(self.home)
             os.execve(BASH, [BASH, '--noprofile', '--rcfile', str(rc), '-i'], {
                 'HOME': str(self.home), 'PATH': str(bin_dir), 'TERM': 'dumb',
+                **({'XDG_CONFIG_HOME': str(config_home)} if xdg_config else {}),
                 'TEST_REPO': str(self.repo), 'LC_ALL': 'C.UTF-8', 'INPUTRC': '/dev/null',
             })
         self.read_prompt()
@@ -89,6 +101,34 @@ class BashErgonomics(unittest.TestCase):
         self.assertIn('LS_ARGS:-l file', self.shell.run('llfile' + '\x02' * 4 + ' \r'))
         self.assertIn('LS_ARGS:-a', self.shell.run('  la\r'))
 
+    def test_upstream_registration_and_command_positions(self):
+        self.assertIn('abbrev-alias 0.1.0', self.shell.run('abbrev-alias --version\r'))
+        self.shell.run("abbrev-alias --command greet='printf HELLO'\r")
+        self.assertIn('HELLO', self.shell.run('greet\r'))
+        self.assertIn('LS_ARGS:-l', self.shell.run('true; ll\r'))
+        self.assertIn('LS_ARGS:-a', self.shell.run('printf x | la\r'))
+        self.assertIn('printf x | ls -a', self.shell.run('history 2\n'))
+
+    def test_missing_library_preserves_native_space_and_enter(self):
+        other = Shell(plugin=False)
+        self.addCleanup(other.close)
+        self.assertIn('\r\nMISSING', other.run('declare -F abbrev-alias >/dev/null || printf MISSING\n'))
+        self.assertIn('LS_ARGS:-l file', other.run('ll file\r'))
+        self.assertIn('ll file', other.run('history 2\n'))
+        self.assertIn('" ": self-insert', other.run('bind -p\n'))
+
+    def test_vi_mode_does_not_load_library(self):
+        other = Shell(editing_mode="vi")
+        self.addCleanup(other.close)
+        self.assertIn('\r\nMISSING', other.run('declare -F abbrev-alias >/dev/null || printf MISSING\n'))
+        self.assertIn('LS_ARGS:-l', other.run('ll\r'))
+
+    def test_xdg_config_home(self):
+        other = Shell(xdg_config=True)
+        self.addCleanup(other.close)
+        self.assertIn('abbrev-alias 0.1.0', other.run('abbrev-alias --version\r'))
+        self.assertIn('LS_ARGS:-al', other.run('lal\r'))
+
     def test_history_selection_does_not_execute(self):
         self.shell.run("history -s 'printf HISTORY_SELECTED'\n")
         self.shell.select('printf HISTORY_SELECTED')
@@ -132,7 +172,7 @@ class BashErgonomics(unittest.TestCase):
     def test_noninteractive_source_is_noop(self):
         result = subprocess.run(
             [BASH, '--noprofile', '--norc', '-c',
-             'source "$1"; declare -F __bash_abbr_expand; printf "DONE"',
+             'source "$1"; declare -F abbrev-alias; printf "DONE"',
              'test', str(ROOT / 'dot_bashrc')],
             env={'HOME': str(self.shell.home), 'PATH': '/nonexistent'},
             capture_output=True, text=True, check=True)

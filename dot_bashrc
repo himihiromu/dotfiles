@@ -118,33 +118,17 @@ __fzf_ghq_search() {
     READLINE_POINT=0
 }
 
-# Expand only a plain command word at the start of the line. Never evaluate
-# editable input (which can contain quotes, substitutions, or shell operators).
-__bash_abbr_expand() {
-    local prefix=${READLINE_LINE:0:READLINE_POINT} replacement
-    if [[ $prefix =~ ^([[:blank:]]*)(la|ll|lal)$ ]]; then
-        case ${BASH_REMATCH[2]} in
-            la) replacement='ls -a' ;;
-            ll) replacement='ls -l' ;;
-            lal) replacement='ls -al' ;;
-        esac
-        replacement=${BASH_REMATCH[1]}$replacement
-        READLINE_LINE=$replacement${READLINE_LINE:READLINE_POINT}
-        READLINE_POINT=${#replacement}
-    fi
-}
+# Home Manager installs the pinned upstream library; chezmoi owns this .bashrc.
+# The library needs Bash 4.2+ and installs bindings in the current keymap.
+# Load it only in Emacs mode, preserving vi editing and older Bash versions.
+if [[ $BASH_VERSINFO -gt 4 || ( $BASH_VERSINFO -eq 4 && ${BASH_VERSINFO[1]} -ge 2 ) ]] &&
+    [[ -o emacs ]] &&
+    [[ -r ${XDG_CONFIG_HOME:-$HOME/.config}/bash/abbrev-alias.plugin.bash ]]; then
+    source "${XDG_CONFIG_HOME:-$HOME/.config}/bash/abbrev-alias.plugin.bash"
+    abbrev-alias --command la='ls -a' ll='ls -l' lal='ls -al'
+fi
 
-__bash_abbr_space() {
-    __bash_abbr_expand
-    READLINE_LINE=${READLINE_LINE:0:READLINE_POINT}' '${READLINE_LINE:READLINE_POINT}
-    READLINE_POINT=$((READLINE_POINT + 1))
-}
-
-# These bindings target Bash's default Emacs editing mode, leaving vi maps alone.
-# Ctrl+J remains accept-line and is the final step of the Enter macro.
-bind -m emacs-standard -x '" ": __bash_abbr_space'
-bind -m emacs-standard -x '"\C-xa": __bash_abbr_expand'
-bind -m emacs-standard '"\C-m": "\C-xa\C-j"'
+# These search bindings target Bash's default Emacs editing mode.
 if command -v fzf >/dev/null 2>&1; then
     bind -m emacs-standard -x '"\C-r": __fzf_history_search'
     if command -v ghq >/dev/null 2>&1; then
