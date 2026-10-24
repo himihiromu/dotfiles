@@ -4,6 +4,7 @@ set -euo pipefail
 
 nix_flake="github:himihiromu/my-nix-package-control"
 local_options="path:$HOME/.config/nix/local-input/default.nix"
+is_wsl={{ default false (index . "is_wsl") }}
 
 distribution_id=""
 if [ -r /etc/os-release ]; then
@@ -11,7 +12,11 @@ if [ -r /etc/os-release ]; then
 fi
 
 if [ "$distribution_id" = "nixos" ]; then
-  sudo nixos-rebuild switch --flake "$nix_flake#nixos" \
+  host="nixos"
+  if [ "$is_wsl" = "true" ]; then
+    host="nixos-wsl"
+  fi
+  sudo nixos-rebuild switch --flake "$nix_flake#$host" \
     --override-input local-options "$local_options"
 else
   nix run nixpkgs#home-manager -- switch --flake "$nix_flake#myHomeConfig" --show-trace \

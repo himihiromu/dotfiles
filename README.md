@@ -105,3 +105,33 @@ OS ごとのセットアップや初期化処理を分けるための領域で�
 - chezmoi 管理対象とローカル専用設定の境界整理
 
 このリポジトリは、設定の最終配置先として分かりやすく保ち、継続的に育てる前提で管理します。
+
+## Nix環境の選択
+
+`chezmoi init` の入力は、次の独立した2項目で環境を選ぶ。
+
+- `is_desktop`: GUIアプリをインストールするか。Nixの `local-options.isDesktop` に渡す。
+- `is_wsl`: WSL環境か。Linuxでのみ質問し、初回NixOS適用のホスト選択に使う。
+
+初回導入はNixOSなら `is_wsl = true` で `#nixos-wsl`、falseで `#nixos` を適用する。
+NixOS以外のLinuxでは、WSL上のUbuntu等でもHome Manager単体の `#myHomeConfig` を使う。
+`is_desktop` によって適用先やNixコマンドを切り替えることはない。
+既存設定に `is_wsl` がない場合はfalseとして扱う。既存のWSL環境では
+`chezmoi init` で設定を追加するか、chezmoiの設定ファイルの `[data]` に `is_wsl = true` を追加する。
+
+この変更は導入スクリプトの選択に使う。run-onceスクリプトは内容が変わると再実行されるため、
+既存のWSL環境は適用前に `is_wsl` を設定する。
+スクリプトを実行せずに設定だけ反映する場合は `chezmoi apply --exclude scripts` を使い、
+必要なホストを明示して適用する。
+
+```sh
+# NixOS-WSL
+mise nixos switch nixos-wsl
+# 実機のGUI環境では is_desktop をtrueにする
+mise nixos switch nixos
+```
+
+WSLで共通CLI環境を導入し、GUI選択を反映するには
+[Nix設定側のPR #83](https://github.com/himihiromu/my-nix-package-control/pull/83) の変更が必要。
+設定確認とテストは `python3 tests/test_nix_bootstrap.py` で行う（chezmoiが必要）。
+テストではNixコマンドをスタブ化し、OS設定の適用は行わない。
