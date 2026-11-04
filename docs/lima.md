@@ -33,7 +33,7 @@ chezmoi の適用で旧内容を空にし、旧ファイルと override の両�
 ## 維持する設定
 
 - x86_64 / aarch64 の Ubuntu イメージ。旧 Ubuntu 21.04 から Docker が対応する Ubuntu 24.04 LTS に更新。
-- `/tmp/lima` と `~/Documents` の書き込み可能マウント。
+- `/tmp/lima`、`~/Documents`、`~/ghq` の書き込み可能マウント。
 - SSH のホストポート `60006`、`~/.ssh/*.pub` の読み込み。
 - Lima が管理する system / user containerd の無効化。
 - Docker のインストール、rootful Docker の service / socket 停止、rootless Docker の初期化。

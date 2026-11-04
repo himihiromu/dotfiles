@@ -78,6 +78,8 @@ images:
 mounts:
 - location: ~/Documents
   writable: false
+- location: ~/ghq
+  writable: false
 - location: /tmp/lima
   writable: false
 ssh:
@@ -107,7 +109,7 @@ portForwards:
                 self.assertEqual(merged["ssh"]["localPort"], 60006)
                 self.assertTrue(merged["ssh"]["loadDotSSHPubKeys"])
                 mounts = {m["location"]: m for m in merged["mounts"]}
-                for location in (str(Path.home() / "Documents"), "/tmp/lima"):
+                for location in (str(Path.home() / "Documents"), str(Path.home() / "ghq"), "/tmp/lima"):
                     self.assertTrue(mounts[location]["writable"])
                 # Old defaults must not duplicate the two global scripts/probe.
                 self.assertEqual(len(merged["provision"]), 3)
