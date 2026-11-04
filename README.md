@@ -61,6 +61,8 @@ Bash の abbr・Ctrl+R 履歴検索・Ctrl+U ghq 検索の操作、既存シェ�
 略語展開には [Nix 側 PR #68](https://github.com/himihiromu/my-nix-package-control/pull/68) の
 Home Manager 設定で配置する `bash-abbrev-alias` が必要です。
 
+Lima の共通 Docker 設定、適用手順、検証方法は [Lima 設定](docs/lima.md) を参照してください。
+
 ### `.chezmoiscripts/`
 - `darwin/`
 - `linux/`
