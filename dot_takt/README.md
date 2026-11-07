@@ -1,10 +1,33 @@
-# TAKT Video Workflows
+# TAKT 制作ワークフロー
 
 技術系VOICEVOX動画の制作・改善・振り返り・Asset制作を行うTAKTワークフロー群です。
 `video-production`、`video-improvement`、`video-retrospective`、`video-assets` の4つのワークフローが
 相互に連携し、Knowledge LayerとAsset Libraryを継続的に成長させます。
 
-## 配置
+## slide-production（勉強会スライド）
+
+スライド制作向けの `slide-production` を追加しています。
+構成 → 一次資料調査 → 原稿・発表者ノート → 技術/伝わりやすさのレビュー → ビルド・ブラウザ検証を行います。
+原稿形式・保存先・ビルド方法は作業先の既存構成から確認します。
+[利用手順](docs/slide-production.md)と[依頼の雛形](templates/slide-order.md)を参照してください。
+
+この `dot_takt/` は chezmoi のソースで、適用すると `~/.takt/` に配置されます。
+変更を確認して `dot_takt/` 内の追加ファイルを適用すると、各資料リポジトリから名前で利用できます。
+`chezmoi diff ~/.takt` で確認し、既存の変更を把握したうえで `chezmoi apply ~/.takt` を行います。
+
+```sh
+cd /path/to/presentation-repository
+takt workflow doctor slide-production
+takt --workflow slide-production --auto-pr --draft
+```
+
+適用前に dotfiles のソースだけを検証する場合は、リポジトリルートで次を使います。
+
+```sh
+TAKT_CONFIG_DIR="$PWD/dot_takt" takt workflow doctor slide-production
+```
+
+## 動画ワークフローをプロジェクトへコピーする場合
 
 このディレクトリの `dot_takt/` を、対象Remotionリポジトリのルートへ `.takt/` としてコピーしてください。
 

@@ -137,3 +137,9 @@ WSLで共通CLI環境を導入し、GUI選択を反映するには
 [Nix設定側のPR #83](https://github.com/himihiromu/my-nix-package-control/pull/83) の変更が必要。
 設定確認とテストは `python3 tests/test_nix_bootstrap.py` で行う（chezmoiが必要）。
 テストではNixコマンドをスタブ化し、OS設定の適用は行わない。
+
+## TAKT 制作ワークフロー
+
+`dot_takt/` は chezmoi で `~/.takt/` に配置します。勉強会スライド用の
+`slide-production` は各資料リポジトリから利用できます。
+[ワークフロー一覧と配置方法](dot_takt/README.md)を参照してください。
