@@ -38,3 +38,22 @@ Library
 .config/fish
 .config/mise
 {{ end }}
+
+# OBS: local credentials, service accounts, UI geometry and transient state.
+scripts
+.gitignore
+.config/obs-studio/plugin_config
+.config/obs-studio/plugin_manager
+.config/obs-studio/logs
+.config/obs-studio/profiler_data
+.config/obs-studio/crashes
+.config/obs-studio/updates
+.config/obs-studio/cache
+.config/obs-studio/user.ini
+.config/obs-studio/**/service.json
+.config/obs-studio/**/*.bak
+.config/obs-studio/**/*.tmp
+.config/obs-studio/**/*.log
+{{ if not (and (eq .chezmoi.os "linux") .is_desktop) }}
+.config/obs-studio
+{{ end }}
