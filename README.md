@@ -137,3 +137,9 @@ WSLで共通CLI環境を導入し、GUI選択を反映するには
 [Nix設定側のPR #83](https://github.com/himihiromu/my-nix-package-control/pull/83) の変更が必要。
 設定確認とテストは `python3 tests/test_nix_bootstrap.py` で行う（chezmoiが必要）。
 テストではNixコマンドをスタブ化し、OS設定の適用は行わない。
+
+## OBSの録画設定
+
+Linuxデスクトップ向けのOBS設定は、GUIで生成したファイルを通常のコピー方式で管理します。
+[OBS設定の取り込み・秘密情報の除外・復元手順](docs/obs-recording.md)を参照してください。
+WebSocket認証は端末ローカルに置き、GitやNix Storeへ取り込みません。

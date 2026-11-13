@@ -1,2 +1,19 @@
 /.takt/
 __pycache__/
+
+# OBS: allow only selected, reviewed GUI-generated configuration.
+/dot_config/obs-studio/*
+!/dot_config/obs-studio/global.ini
+!/dot_config/obs-studio/global.ini.tmpl
+!/dot_config/obs-studio/basic/
+/dot_config/obs-studio/basic/*
+!/dot_config/obs-studio/basic/profiles/
+!/dot_config/obs-studio/basic/scenes/
+/dot_config/obs-studio/basic/profiles/*/*
+!/dot_config/obs-studio/basic/profiles/*/basic.ini
+!/dot_config/obs-studio/basic/profiles/*/basic.ini.tmpl
+!/dot_config/obs-studio/basic/profiles/*/recordEncoder.json
+!/dot_config/obs-studio/basic/profiles/*/recordEncoder.json.tmpl
+/dot_config/obs-studio/basic/scenes/*
+!/dot_config/obs-studio/basic/scenes/*.json
+!/dot_config/obs-studio/basic/scenes/*.json.tmpl
