@@ -117,3 +117,8 @@ chezmoi 2.73.0 の `managed`（一時設定・一時 destination を指定）で
 実際の chezmoi 適用、各 devShell の起動、管理コマンドの実行（switch / update / gc）、
 実 sudo による昇格、対話シェルのジョブ制御、macOS、
 別バージョンの mise は未検証です。カスタム ghq ルートを対象にするかは別途判断が必要です。
+
+Nix用local-optionsはchezmoiから `system`（例: `aarch64-darwin`）も生成する。
+Nix側の標準flake output移行後も `myHomeConfig` / `mac-config` の呼出し名を維持し、
+純粋評価でホストのアーキテクチャを選ぶために使う。既存端末ではchezmoiで
+`~/.config/nix/local-input/default.nix` を再生成する。NixOSのホスト選択は従来どおり別指定。

@@ -63,6 +63,18 @@ class NixBootstrapTest(unittest.TestCase):
                 )
                 self.assertIs(tomllib.loads(rendered)["data"]["is_wsl"], False)
 
+    def test_local_options_records_nix_system(self):
+        self.config.write_text('[data]\nmachine_username = "tester"\nis_desktop = true\ngit_username = "test"\ngit_email = "test@example.com"\n')
+        template = (ROOT / "dot_config/nix/local-input/default.nix.tmpl").read_text()
+        for os_name in ("linux", "darwin"):
+            for arch, nix_arch in (("amd64", "x86_64"), ("arm64", "aarch64")):
+                with self.subTest(os=os_name, arch=arch):
+                    prefix = '{{ $_ := set .chezmoi "os" "' + os_name + '" }}{{ $_ := set .chezmoi "arch" "' + arch + '" }}'
+                    rendered = self.render(prefix + template)
+                    self.assertIn('system = "' + nix_arch + '-' + os_name + '";', rendered)
+                    self.assertIn('username = "tester";', rendered)
+                    self.assertIn('isDesktop = true;', rendered)
+
     def bootstrap(self, distribution, desktop, wsl):
         data = f"[data]\nis_desktop = {str(desktop).lower()}\n"
         if wsl is not None:
