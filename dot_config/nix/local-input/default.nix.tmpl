@@ -4,6 +4,14 @@
   isDesktop = {{ .is_desktop }};
   system = "{{ if eq .chezmoi.arch "amd64" }}x86_64{{ else if eq .chezmoi.arch "arm64" }}aarch64{{ else }}{{ fail "Unsupported Nix architecture" }}{{ end }}-{{ .chezmoi.os }}";
 
+{{ if and (hasKey . "custom_nix_profiles") .custom_nix_profiles }}
+{{ if not (hasKey . "nix_home_profiles") }}{{ fail "chezmoi initでHome Managerの機能を選択してください" }}{{ end }}
+  homeProfiles = [
+{{ range .nix_home_profiles }}
+    {{ . | quote }}
+{{ end }}
+  ];
+{{ end }}
   # git
   gitUsername = "{{ .git_username }}";
   gitEmail = "{{ .git_email }}";

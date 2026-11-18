@@ -138,6 +138,41 @@ WSLで共通CLI環境を導入し、GUI選択を反映するには
 設定確認とテストは `python3 tests/test_nix_bootstrap.py` で行う（chezmoiが必要）。
 テストではNixコマンドをスタブ化し、OS設定の適用は行わない。
 
+## Home Managerの機能をチェックボックスで選ぶ
+
+chezmoi 2.60以降の標準UIを使い、追加ツールなしで選択する。
+`chezmoi init` で「Home Managerの導入機能を個別に選びますか」にyesと答えると、
+矢印キーで移動、Space（またはx）でチェック、Enterで確定できる。
+共通CLI・シェルは常に導入する。何も選ばず確定すると、追加機能のない共通CLI環境になる。
+
+| 表示する機能 | 対応するprofile | 表示する環境 |
+| --- | --- | --- |
+| GUIアプリ・ブラウザ・GUIエディタ | gui-apps | Linux・macOS |
+| Hyprlandデスクトップ・Waybar・壁紙・ロック | hyprland | WSL以外のLinux |
+| Hyprland関連ツールのみ | hyprland-tools | WSL |
+| ゲーム環境（Minecraft・Heroic） | gaming | Linux |
+| 録画環境（OBS・Hyprlandキー連携） | recording | WSL以外のLinux |
+| macOS用ツール（Lima・skhd） | darwin | macOS |
+
+個別選択しない場合は、従来のis_desktop・OS・WSLによる自動選択を使う。
+個別選択の結果は端末のchezmoi設定の `[data].nix_home_profiles` に保存し、
+local-optionsの `homeProfiles` へ縦並びで書き出す。既存設定に選択項目がなければ
+homeProfilesを出力しないので、通常のchezmoi applyで既存の導入内容を切り替えない。
+この選択を使うにはNix側の [PR #104](https://github.com/himihiromu/my-nix-package-control/pull/104) 以降が必要。
+
+is_desktopはNixOS側のデスクトップ機能やmacOSのHomebrew GUI導入にも使うため、
+Home Managerの選択とは別に残している。NixOSでHyprlandを使う場合はis_desktopもtrueにする。
+録画用キー連携を使う場合はHyprlandも選択する。
+
+選び直す場合は `chezmoi edit-config` で `nix_home_profiles` の行を削除し、
+`custom_nix_profiles = true` を設定してから `chezmoi init` を実行する。
+設定を変更せずに再初期化した場合は、保存済みの複数選択・空の選択を再利用する。
+自動選択へ戻す場合は `custom_nix_profiles = false` にする。
+設定だけを反映したい場合は `chezmoi apply --exclude scripts` を使う。
+
+標準機能の出典: [promptMultichoice](https://www.chezmoi.io/reference/templates/init-functions/promptMultichoice/)。
+検証は `python3 tests/test_nix_bootstrap.py` と `python3 tests/test_mise.py`。
+
 ## OBSの録画設定
 
 Linuxデスクトップ向けのOBS設定は、GUIで生成したファイルを通常のコピー方式で管理します。
