@@ -7,9 +7,9 @@
 {{ if and (hasKey . "custom_nix_profiles") .custom_nix_profiles }}
 {{ if not (hasKey . "nix_home_profiles") }}{{ fail "chezmoi initでHome Managerの機能を選択してください" }}{{ end }}
   homeProfiles = [
-{{ range .nix_home_profiles }}
+{{- range .nix_home_profiles }}
     {{ . | quote }}
-{{ end }}
+{{- end }}
   ];
 {{ end }}
   # git
