@@ -11,46 +11,35 @@
 {{- $custom_nix_profiles := false }}
 {{- $nix_home_profiles := list }}
 {{- if or (eq .chezmoi.os "linux") (eq .chezmoi.os "darwin") }}
-{{- $custom_nix_profiles = promptBoolOnce . "custom_nix_profiles" "Home Managerの導入機能を個別に選びますか" false }}
+{{- $custom_nix_profiles = promptBoolOnce . "custom_nix_profiles" "Home Managerの追加機能を個別に選びますか" false }}
 {{- if $custom_nix_profiles }}
 {{- $profile_labels := dict
-    "gui-apps" "GUIアプリ・ブラウザ・GUIエディタ"
     "hyprland" "Hyprlandデスクトップ・Waybar・壁紙・ロック"
-    "hyprland-tools" "Hyprland関連ツールのみ"
     "gaming" "ゲーム環境（Minecraft・Heroic）"
     "recording" "録画環境（OBS・Hyprlandキー連携）"
     "darwin" "macOS用ツール（Lima・skhd）"
 }}
-{{- $available := list "gui-apps" }}
-{{- if eq .chezmoi.os "darwin" }}
-{{- $available = append $available "darwin" }}
-{{- else if $is_wsl }}
-{{- $available = concat $available (list "hyprland-tools" "gaming") }}
-{{- else }}
-{{- $available = concat $available (list "hyprland" "gaming" "recording") }}
-{{- end }}
+{{- $params := dict "os" .chezmoi.os "desktop" $is_desktop "wsl" $is_wsl "selected" (list) }}
 {{- if hasKey . "nix_home_profiles" }}
-{{- if not (kindIs "slice" .nix_home_profiles) }}
-{{- fail "nix_home_profilesは配列で指定してください" }}
+{{- $_ := set $params "selected" .nix_home_profiles }}
 {{- end }}
-{{- range .nix_home_profiles }}
-{{- if not (or (eq . "base") (has . $available)) }}
-{{- fail (printf "このOS・WSL構成ではprofile %qは選べません" .) }}
-{{- end }}
-{{- end }}
-{{- $nix_home_profiles = .nix_home_profiles }}
-{{- else }}
+{{- $selection := includeTemplate "nix-home-profiles.json.tmpl" $params | fromJson }}
+{{- if not (hasKey . "nix_home_profiles") }}
 {{- $choices := list }}
-{{- range $available }}
+{{- range $selection.available }}
 {{- $choices = append $choices (index $profile_labels .) }}
 {{- end }}
-{{- $selected := promptMultichoice "使う機能を選択（Space:切替 / Enter:確定 / 未選択:共通CLIのみ）" $choices }}
-{{- range $available }}
+{{- $selected := promptMultichoice "追加機能を選択（Space:切替 / Enter:確定 / 未選択:追加なし）" $choices }}
+{{- $extras := list }}
+{{- range $selection.available }}
 {{- if has (index $profile_labels .) $selected }}
-{{- $nix_home_profiles = append $nix_home_profiles . }}
+{{- $extras = append $extras . }}
 {{- end }}
 {{- end }}
+{{- $_ := set $params "selected" $extras }}
+{{- $selection = includeTemplate "nix-home-profiles.json.tmpl" $params | fromJson }}
 {{- end }}
+{{- $nix_home_profiles = $selection.profiles }}
 {{- end }}
 {{- end }}
 

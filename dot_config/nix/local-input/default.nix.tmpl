@@ -6,8 +6,10 @@
 
 {{ if and (hasKey . "custom_nix_profiles") .custom_nix_profiles }}
 {{ if not (hasKey . "nix_home_profiles") }}{{ fail "chezmoi initでHome Managerの機能を選択してください" }}{{ end }}
+{{ $params := dict "os" .chezmoi.os "desktop" .is_desktop "wsl" (default false (index . "is_wsl")) "selected" .nix_home_profiles }}
+{{ $selection := includeTemplate "nix-home-profiles.json.tmpl" $params | fromJson }}
   homeProfiles = [
-{{- range .nix_home_profiles }}
+{{- range $selection.profiles }}
     {{ . | quote }}
 {{- end }}
   ];

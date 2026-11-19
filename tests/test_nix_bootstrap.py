@@ -78,10 +78,10 @@ class NixBootstrapTest(unittest.TestCase):
                     self.assertIn('username = "tester";', rendered)
                     self.assertIn('isDesktop = true;', rendered)
 
-    def profile_config(self, profiles, *, wsl=False, custom=True):
+    def profile_config(self, profiles, *, wsl=False, custom=True, desktop=True):
         self.config.write_text(
             '[data]\nmachine_username = "tester"\ngit_username = "test"\ngit_email = "test@example.com"\n'
-            + 'is_desktop = true\nis_wsl = ' + str(wsl).lower() + '\n'
+            + 'is_desktop = ' + str(desktop).lower() + '\nis_wsl = ' + str(wsl).lower() + '\n'
             + 'custom_nix_profiles = ' + str(custom).lower() + '\n'
             + 'nix_home_profiles = ' + json.dumps(profiles, ensure_ascii=False) + '\n'
         )
@@ -89,14 +89,14 @@ class NixBootstrapTest(unittest.TestCase):
     def test_profile_checkbox_maps_label_to_id(self):
         result = self.render(
             (ROOT / ".chezmoi.toml.tmpl").read_text(), "--init",
-            "--promptBool", "Install desktop GUI applications=true,Is this a WSL environment=false,Home Managerの導入機能を個別に選びますか=true",
+            "--promptBool", "Install desktop GUI applications=true,Is this a WSL environment=false,Home Managerの追加機能を個別に選びますか=true",
             "--promptString", "Git username=test,Git email=test@example.com",
             "--promptChoice", "Setting PC Type=private_pc",
-            "--promptMultichoice", "使う機能を選択（Space:切替 / Enter:確定 / 未選択:共通CLIのみ）=ゲーム環境（Minecraft・Heroic）",
+            "--promptMultichoice", "追加機能を選択（Space:切替 / Enter:確定 / 未選択:追加なし）=ゲーム環境（Minecraft・Heroic）",
         )
         data = tomllib.loads(result)["data"]
         self.assertTrue(data["custom_nix_profiles"])
-        self.assertEqual(data["nix_home_profiles"], ["gaming"])
+        self.assertEqual(data["nix_home_profiles"], ["gui-apps", "gaming"])
 
     def test_platform_checkbox_choices(self):
         for platform, wsl, label, expected in (
@@ -108,42 +108,81 @@ class NixBootstrapTest(unittest.TestCase):
                 prefix = '{{ $_ := set .chezmoi "os" "' + platform + '" }}'
                 result = self.render(
                     prefix + (ROOT / ".chezmoi.toml.tmpl").read_text(), "--init",
-                    "--promptBool", "Install desktop GUI applications=true,Is this a WSL environment=" + str(wsl).lower() + ",Home Managerの導入機能を個別に選びますか=true",
+                    "--promptBool", "Install desktop GUI applications=true,Is this a WSL environment=" + str(wsl).lower() + ",Home Managerの追加機能を個別に選びますか=true",
                     "--promptString", "Git username=test,Git email=test@example.com",
                     "--promptChoice", "Setting PC Type=private_pc",
-                    "--promptMultichoice", "使う機能を選択（Space:切替 / Enter:確定 / 未選択:共通CLIのみ）=" + label,
+                    "--promptMultichoice", "追加機能を選択（Space:切替 / Enter:確定 / 未選択:追加なし）=" + label,
                 )
-                self.assertEqual(tomllib.loads(result)["data"]["nix_home_profiles"], [expected])
+                self.assertEqual(tomllib.loads(result)["data"]["nix_home_profiles"], ["gui-apps", expected])
 
     def test_saved_multiple_profiles_and_empty_selection_are_preserved(self):
         for profiles in (["gui-apps", "gaming"], []):
             with self.subTest(profiles=profiles):
                 self.profile_config(profiles)
                 result = self.render((ROOT / ".chezmoi.toml.tmpl").read_text(), "--init", "--promptChoice", "Setting PC Type=private_pc")
-                self.assertEqual(tomllib.loads(result)["data"]["nix_home_profiles"], profiles)
+                self.assertEqual(tomllib.loads(result)["data"]["nix_home_profiles"], ["gui-apps"] + [p for p in profiles if p != "gui-apps"])
 
     def test_wsl_rejects_saved_physical_session_profile(self):
         for profile in ("hyprland", "recording"):
             with self.subTest(profile=profile):
                 self.profile_config([profile], wsl=True)
                 error = self.render((ROOT / ".chezmoi.toml.tmpl").read_text(), "--init", "--promptChoice", "Setting PC Type=private_pc", expect_error=True)
-                self.assertIn("このOS・WSL構成ではprofile", error)
+                self.assertIn("このOS・WSL・デスクトップ構成ではprofile", error)
 
     def test_darwin_rejects_saved_linux_profile(self):
         self.profile_config(["gaming"])
         error = self.render('{{ $_ := set .chezmoi "os" "darwin" }}' + (ROOT / ".chezmoi.toml.tmpl").read_text(), "--init", "--promptChoice", "Setting PC Type=private_pc", expect_error=True)
-        self.assertIn("このOS・WSL構成ではprofile", error)
+        self.assertIn("このOS・WSL・デスクトップ構成ではprofile", error)
+
+    def test_gui_follows_desktop_answer_on_reinitialization(self):
+        for desktop in (False, True):
+            with self.subTest(desktop=desktop):
+                # Saved gui-apps from an earlier answer is recomputed, not trusted.
+                self.profile_config(["gui-apps", "gaming"], desktop=desktop)
+                rendered = self.render((ROOT / ".chezmoi.toml.tmpl").read_text(), "--init", "--promptChoice", "Setting PC Type=private_pc")
+                expected = (["gui-apps"] if desktop else []) + ["gaming"]
+                self.assertEqual(tomllib.loads(rendered)["data"]["nix_home_profiles"], expected)
+
+    def test_available_choices_follow_os_wsl_and_desktop(self):
+        for platform, wsl, desktop, expected in (
+            ("linux", False, True, ["hyprland", "gaming", "recording"]),
+            ("linux", True, True, ["gaming"]),
+            ("linux", False, False, ["gaming"]),
+            ("linux", True, False, ["gaming"]),
+            ("darwin", False, True, ["darwin"]),
+            ("darwin", False, False, ["darwin"]),
+        ):
+            with self.subTest(platform=platform, wsl=wsl, desktop=desktop):
+                expression = ('{{ includeTemplate "nix-home-profiles.json.tmpl" (dict "os" "'
+                    + platform + '" "wsl" ' + str(wsl).lower() + ' "desktop" '
+                    + str(desktop).lower() + ' "selected" (list)) }}')
+                data = json.loads(self.render(expression))
+                self.assertEqual(data["available"], expected)
+                self.assertEqual(data["profiles"], ["gui-apps"] if desktop else [])
+
+    def test_physical_session_requires_desktop_answer(self):
+        self.profile_config(["hyprland"], desktop=False)
+        for template in (".chezmoi.toml.tmpl", "dot_config/nix/local-input/default.nix.tmpl"):
+            with self.subTest(template=template):
+                error = self.render((ROOT / template).read_text(), "--init", "--promptChoice", "Setting PC Type=private_pc", expect_error=True)
+                self.assertIn("このOS・WSL・デスクトップ構成ではprofile", error)
 
     def test_profile_export_and_legacy_compatibility(self):
-        for custom, profiles in ((True, ["gui-apps", "gaming"]), (True, []), (False, ["gaming"])):
-            with self.subTest(custom=custom, profiles=profiles):
-                self.profile_config(profiles, custom=custom)
+        for custom, desktop, profiles in (
+            (True, True, ["gui-apps", "gaming"]),
+            (True, False, ["gui-apps", "gaming"]),
+            (True, True, []),
+            (True, False, []),
+            (False, True, ["gaming"]),
+        ):
+            with self.subTest(custom=custom, desktop=desktop, profiles=profiles):
+                self.profile_config(profiles, custom=custom, desktop=desktop)
                 rendered = self.render((ROOT / "dot_config/nix/local-input/default.nix.tmpl").read_text())
                 if shutil.which("nix-instantiate"):
                     result = subprocess.run(["nix-instantiate", "--eval", "--strict", "--json", "--expr", rendered], capture_output=True, text=True, check=True)
                     data = json.loads(result.stdout)
                     if custom:
-                        self.assertEqual(data["homeProfiles"], profiles)
+                        self.assertEqual(data["homeProfiles"], (["gui-apps"] if desktop else []) + [p for p in profiles if p != "gui-apps"])
                     else:
                         self.assertNotIn("homeProfiles", data)
                 else:

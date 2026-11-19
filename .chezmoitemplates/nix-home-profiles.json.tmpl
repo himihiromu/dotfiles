@@ -1,0 +1,34 @@
+{{- /* 初期設定とlocal-options生成で共通利用。GUIは上の回答から判定する。 */ -}}
+{{- $desktop := eq (toString .desktop) "true" -}}
+{{- $wsl := eq (toString .wsl) "true" -}}
+{{- $available := list -}}
+{{- if eq .os "linux" -}}
+{{- $available = list "gaming" -}}
+{{- if and $desktop (not $wsl) -}}
+{{- $available = list
+    "hyprland"
+    "gaming"
+    "recording"
+-}}
+{{- end -}}
+{{- else if eq .os "darwin" -}}
+{{- $available = list "darwin" -}}
+{{- end -}}
+{{- if not (kindIs "slice" .selected) -}}
+{{- fail "nix_home_profilesは配列で指定してください" -}}
+{{- end -}}
+{{- range .selected -}}
+{{- if not (or (eq . "base") (eq . "gui-apps") (has . $available)) -}}
+{{- fail (printf "このOS・WSL・デスクトップ構成ではprofile %qは選べません" .) -}}
+{{- end -}}
+{{- end -}}
+{{- $profiles := list -}}
+{{- if $desktop -}}
+{{- $profiles = append $profiles "gui-apps" -}}
+{{- end -}}
+{{- range $available -}}
+{{- if has . $.selected -}}
+{{- $profiles = append $profiles . -}}
+{{- end -}}
+{{- end -}}
+{{- dict "available" $available "profiles" $profiles | toJson -}}
