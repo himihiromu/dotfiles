@@ -138,6 +138,11 @@ WSLで共通CLI環境を導入し、GUI選択を反映するには
 設定確認とテストは `python3 tests/test_nix_bootstrap.py` で行う（chezmoiが必要）。
 テストではNixコマンドをスタブ化し、OS設定の適用は行わない。
 
+## デスクトップ通知
+
+Linuxデスクトップの通知は、ポップアップを3秒で非表示にし、Waybarから履歴を確認します。
+[通知設定の反映手順と例外](docs/notifications.md)を参照してください。
+
 ## OBSの録画設定
 
 Linuxデスクトップ向けのOBS設定は、GUIで生成したファイルを通常のコピー方式で管理します。
