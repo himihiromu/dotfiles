@@ -179,6 +179,11 @@ NixOSでHyprlandを使う場合はis_desktopをtrueにする。
 標準機能の出典: [promptMultichoice](https://www.chezmoi.io/reference/templates/init-functions/promptMultichoice/)。
 検証は `python3 tests/test_nix_bootstrap.py` と `python3 tests/test_mise.py`。
 
+## デスクトップ通知
+
+Linuxデスクトップの通知は、ポップアップを3秒で非表示にし、Waybarから履歴を確認します。
+[通知設定の反映手順と例外](docs/notifications.md)を参照してください。
+
 ## OBSの録画設定
 
 Linuxデスクトップ向けのOBS設定は、GUIで生成したファイルを通常のコピー方式で管理します。
