@@ -138,6 +138,48 @@ WSLで共通CLI環境を導入し、GUI選択を反映するには
 設定確認とテストは `python3 tests/test_nix_bootstrap.py` で行う（chezmoiが必要）。
 テストではNixコマンドをスタブ化し、OS設定の適用は行わない。
 
+## Home Managerの追加機能をチェックボックスで選ぶ
+
+chezmoi 2.60以降の標準UIを使い、追加ツールなしで選択する。
+GUIアプリは、上で回答した `is_desktop` がtrueなら導入、falseなら除外する。
+GUIをチェックボックスでもう一度選ばせることはない。
+
+`chezmoi init` で「Home Managerの追加機能を個別に選びますか」にyesと答えると、
+矢印キーで移動、Space（またはx）でチェック、Enterで確定できる。
+共通CLI・シェルは常に導入し、未選択で確定すると追加機能だけを省略する。
+例えばis_desktopがtrueなら、追加機能を選ばなくてもGUIアプリは導入される。
+
+| 表示する追加機能 | 対応するprofile | 表示条件 |
+| --- | --- | --- |
+| Hyprlandデスクトップ・Waybar・壁紙・ロック | hyprland | Linux・非WSL・is_desktop=true |
+| ゲーム環境（Minecraft・Heroic） | gaming | Linux（WSLを含む） |
+| 録画環境（OBS・Hyprlandキー連携） | recording | Linux・非WSL・is_desktop=true |
+| macOS用ツール（Lima・skhd） | darwin | macOS |
+
+OS・WSL・GUIの回答から候補を自動で絞る。WSLではHyprlandセッションや録画、
+Hyprland関連ツールだけを選ぶ項目は表示しない。WSLでもゲームを使うかは選択できる。
+録画のHyprlandキー連携を使う場合はHyprlandも選択する。
+
+個別選択しない場合は、従来のis_desktop・OS・WSLによる自動構成を使う。
+個別選択の結果と自動判定したGUIは、端末のchezmoi設定の `[data].nix_home_profiles` に保存し、
+local-optionsの `homeProfiles` へ縦並びで書き出す。GUIは初期設定時と生成時に同じルールで
+判定するため、is_desktopの回答を変えれば保存済みのGUI選択もそれに追従する。
+候補リストと条件分岐は各テンプレートに直接記述し、JSONファイルや変換処理を挟まない。
+既存設定に個別選択の設定がなければhomeProfilesを出力せず、通常のchezmoi applyで
+従来の導入内容を切り替えない。Nix側は [PR #104](https://github.com/himihiromu/my-nix-package-control/pull/104) 以降に対応する。
+
+is_desktopはNixOS側のデスクトップ機能やmacOSのHomebrew GUI導入にも使う。
+NixOSでHyprlandを使う場合はis_desktopをtrueにする。
+
+追加機能を選び直す場合は `chezmoi edit-config` で `nix_home_profiles` の行を削除し、
+`custom_nix_profiles = true` を設定してから `chezmoi init` を実行する。
+設定を変えずに再初期化した場合は、保存済みの追加機能（未選択を含む）を再利用する。
+従来の自動構成へ戻す場合は `custom_nix_profiles = false` にする。
+設定だけを反映したい場合は `chezmoi apply --exclude scripts` を使う。
+
+標準機能の出典: [promptMultichoice](https://www.chezmoi.io/reference/templates/init-functions/promptMultichoice/)。
+検証は `python3 tests/test_nix_bootstrap.py` と `python3 tests/test_mise.py`。
+
 ## デスクトップ通知
 
 Linuxデスクトップの通知は、ポップアップを3秒で非表示にし、Waybarから履歴を確認します。

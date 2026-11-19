@@ -4,6 +4,42 @@
   isDesktop = {{ .is_desktop }};
   system = "{{ if eq .chezmoi.arch "amd64" }}x86_64{{ else if eq .chezmoi.arch "arm64" }}aarch64{{ else }}{{ fail "Unsupported Nix architecture" }}{{ end }}-{{ .chezmoi.os }}";
 
+{{ if and (hasKey . "custom_nix_profiles") .custom_nix_profiles }}
+{{ if not (hasKey . "nix_home_profiles") }}{{ fail "chezmoi initでHome Managerの機能を選択してください" }}{{ end }}
+{{- $is_desktop := eq (toString .is_desktop) "true" }}
+{{- $is_wsl := eq (toString (default false (index . "is_wsl"))) "true" }}
+{{- $available_profiles := list }}
+{{- if eq .chezmoi.os "linux" }}
+{{- $available_profiles = list "gaming" }}
+{{- if and $is_desktop (not $is_wsl) }}
+{{- $available_profiles = list
+    "hyprland"
+    "gaming"
+    "recording"
+}}
+{{- end }}
+{{- else if eq .chezmoi.os "darwin" }}
+{{- $available_profiles = list "darwin" }}
+{{- end }}
+{{- if not (kindIs "slice" .nix_home_profiles) }}
+{{- fail "nix_home_profilesは配列で指定してください" }}
+{{- end }}
+{{- range .nix_home_profiles }}
+{{- if not (or (eq . "base") (eq . "gui-apps") (has . $available_profiles)) }}
+{{- fail (printf "このOS・WSL・デスクトップ構成ではprofile %qは選べません" .) }}
+{{- end }}
+{{- end }}
+  homeProfiles = [
+{{- if $is_desktop }}
+    "gui-apps"
+{{- end }}
+{{- range $available_profiles }}
+{{- if has . $.nix_home_profiles }}
+    {{ . | quote }}
+{{- end }}
+{{- end }}
+  ];
+{{ end }}
   # git
   gitUsername = "{{ .git_username }}";
   gitEmail = "{{ .git_email }}";

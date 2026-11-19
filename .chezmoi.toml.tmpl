@@ -8,7 +8,71 @@
 {{- $all_pc_type := list "private_pc" "office_pc" -}}
 {{- $setting_pc_type := promptChoiceOnce . "setting_pc_type" "Setting PC Type" $all_pc_type -}}
 
+{{- $custom_nix_profiles := false }}
+{{- $nix_home_profiles := list }}
+{{- if or (eq .chezmoi.os "linux") (eq .chezmoi.os "darwin") }}
+{{- $custom_nix_profiles = promptBoolOnce . "custom_nix_profiles" "Home Managerの追加機能を個別に選びますか" false }}
+{{- if $custom_nix_profiles }}
+{{- $available_profiles := list }}
+{{- if eq .chezmoi.os "linux" }}
+{{- $available_profiles = list "gaming" }}
+{{- if and $is_desktop (not $is_wsl) }}
+{{- $available_profiles = list
+    "hyprland"
+    "gaming"
+    "recording"
+}}
+{{- end }}
+{{- else if eq .chezmoi.os "darwin" }}
+{{- $available_profiles = list "darwin" }}
+{{- end }}
+{{- $profile_labels := dict
+    "hyprland" "Hyprlandデスクトップ・Waybar・壁紙・ロック"
+    "gaming" "ゲーム環境（Minecraft・Heroic）"
+    "recording" "録画環境（OBS・Hyprlandキー連携）"
+    "darwin" "macOS用ツール（Lima・skhd）"
+}}
+{{- $selected_profiles := list }}
+{{- if hasKey . "nix_home_profiles" }}
+{{- $selected_profiles = .nix_home_profiles }}
+{{- if not (kindIs "slice" $selected_profiles) }}
+{{- fail "nix_home_profilesは配列で指定してください" }}
+{{- end }}
+{{- range $selected_profiles }}
+{{- if not (or (eq . "base") (eq . "gui-apps") (has . $available_profiles)) }}
+{{- fail (printf "このOS・WSL・デスクトップ構成ではprofile %qは選べません" .) }}
+{{- end }}
+{{- end }}
+{{- else }}
+{{- $choices := list }}
+{{- range $available_profiles }}
+{{- $choices = append $choices (index $profile_labels .) }}
+{{- end }}
+{{- $selected := promptMultichoice "追加機能を選択（Space:切替 / Enter:確定 / 未選択:追加なし）" $choices }}
+{{- range $available_profiles }}
+{{- if has (index $profile_labels .) $selected }}
+{{- $selected_profiles = append $selected_profiles . }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- if $is_desktop }}
+{{- $nix_home_profiles = append $nix_home_profiles "gui-apps" }}
+{{- end }}
+{{- range $available_profiles }}
+{{- if has . $selected_profiles }}
+{{- $nix_home_profiles = append $nix_home_profiles . }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+
 [data]
+{{- if or (eq .chezmoi.os "linux") (eq .chezmoi.os "darwin") }}
+    custom_nix_profiles = {{ $custom_nix_profiles }}
+{{- if $custom_nix_profiles }}
+    nix_home_profiles = {{ $nix_home_profiles | toToml }}
+{{- end }}
+{{- end }}
 	machine_username = {{ env "USER" | quote }}
 	git_username = {{ $git_username | quote }}
 	is_desktop = {{ $is_desktop | quote }}
