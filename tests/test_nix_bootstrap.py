@@ -144,6 +144,14 @@ class NixBootstrapTest(unittest.TestCase):
                 self.assertEqual(tomllib.loads(rendered)["data"]["nix_home_profiles"], expected)
 
     def test_available_choices_follow_os_wsl_and_desktop(self):
+        labels = {
+            "hyprland": "Hyprlandデスクトップ・Waybar・壁紙・ロック",
+            "gaming": "ゲーム環境（Minecraft・Heroic）",
+            "recording": "録画環境（OBS・Hyprlandキー連携）",
+            "darwin": "macOS用ツール（Lima・skhd）",
+        }
+        init_template = (ROOT / ".chezmoi.toml.tmpl").read_text()
+        output_template = (ROOT / "dot_config/nix/local-input/default.nix.tmpl").read_text()
         for platform, wsl, desktop, expected in (
             ("linux", False, True, ["hyprland", "gaming", "recording"]),
             ("linux", True, True, ["gaming"]),
@@ -152,13 +160,30 @@ class NixBootstrapTest(unittest.TestCase):
             ("darwin", False, True, ["darwin"]),
             ("darwin", False, False, ["darwin"]),
         ):
-            with self.subTest(platform=platform, wsl=wsl, desktop=desktop):
-                expression = ('{{ includeTemplate "nix-home-profiles.json.tmpl" (dict "os" "'
-                    + platform + '" "wsl" ' + str(wsl).lower() + ' "desktop" '
-                    + str(desktop).lower() + ' "selected" (list)) }}')
-                data = json.loads(self.render(expression))
-                self.assertEqual(data["available"], expected)
-                self.assertEqual(data["profiles"], ["gui-apps"] if desktop else [])
+            prefix = '{{ $_ := set .chezmoi "os" "' + platform + '" }}'
+            for profile, label in labels.items():
+                with self.subTest(platform=platform, wsl=wsl, desktop=desktop, profile=profile):
+                    if profile not in expected:
+                        self.profile_config([profile], wsl=wsl, desktop=desktop)
+                        for template in (init_template, output_template):
+                            error = self.render(prefix + template, "--init", "--promptChoice", "Setting PC Type=private_pc", expect_error=True)
+                            self.assertIn("このOS・WSL・デスクトップ構成ではprofile", error)
+                        continue
+                    self.config.write_text("")
+                    rendered = self.render(
+                        prefix + init_template, "--init",
+                        "--promptBool", "Install desktop GUI applications=" + str(desktop).lower() + ",Is this a WSL environment=" + str(wsl).lower() + ",Home Managerの追加機能を個別に選びますか=true",
+                        "--promptString", "Git username=test,Git email=test@example.com",
+                        "--promptChoice", "Setting PC Type=private_pc",
+                        "--promptMultichoice", "追加機能を選択（Space:切替 / Enter:確定 / 未選択:追加なし）=" + label,
+                    )
+                    profiles = (["gui-apps"] if desktop else []) + [profile]
+                    self.assertEqual(tomllib.loads(rendered)["data"]["nix_home_profiles"], profiles)
+                    # Use the actual init output, including its string is_desktop.
+                    self.config.write_text(rendered)
+                    output = self.render(prefix + output_template)
+                    expected_list = "homeProfiles = [\n" + "".join(f'    "{p}"\n' for p in profiles) + "  ];"
+                    self.assertIn(expected_list, output)
 
     def test_physical_session_requires_desktop_answer(self):
         self.profile_config(["hyprland"], desktop=False)

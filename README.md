@@ -164,6 +164,7 @@ Hyprland関連ツールだけを選ぶ項目は表示しない。WSLでもゲー
 個別選択の結果と自動判定したGUIは、端末のchezmoi設定の `[data].nix_home_profiles` に保存し、
 local-optionsの `homeProfiles` へ縦並びで書き出す。GUIは初期設定時と生成時に同じルールで
 判定するため、is_desktopの回答を変えれば保存済みのGUI選択もそれに追従する。
+候補リストと条件分岐は各テンプレートに直接記述し、JSONファイルや変換処理を挟まない。
 既存設定に個別選択の設定がなければhomeProfilesを出力せず、通常のchezmoi applyで
 従来の導入内容を切り替えない。Nix側は [PR #104](https://github.com/himihiromu/my-nix-package-control/pull/104) 以降に対応する。
 
